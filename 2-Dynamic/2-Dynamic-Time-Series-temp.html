@@ -4,7 +4,7 @@
     <title>2: Dynamic Time Series</title>
     <meta charset="utf-8" />
     <meta name="author" content="J. Seawright" />
-    <script src="2-Dynamic-Time-Series_files/header-attrs-2.18/header-attrs.js"></script>
+    <script src="2-Dynamic-Time-Series-temp_files/header-attrs-2.14/header-attrs.js"></script>
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
@@ -24,7 +24,7 @@ class: center, middle, inverse, title-slide
 ### <small>Northwestern Political Science</small>
 ]
 .date[
-### Friday, 31 March, 2023
+### Thursday, 6 April, 2023
 ]
 
 ---
@@ -403,56 +403,6 @@ If we can get good estimates of the error term in our regression, we can figure 
 ---
 &lt;img src="policyattitudesardl.jpg" width="100%" /&gt;
 
-
----
-
-
-
-```r
-summary(lm(AlexJones~alexjoneslagged + alexjoneslagged2 + SchoolShooting + GunControl + DonaldTrump, data=ajgoogle2))
-```
-
-```
-## 
-## Call:
-## lm(formula = AlexJones ~ alexjoneslagged + alexjoneslagged2 + 
-##     SchoolShooting + GunControl + DonaldTrump, data = ajgoogle2)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -3.8942 -0.7486 -0.1922  0.3358 20.6261 
-## 
-## Coefficients:
-##                   Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)       0.896189   0.296908   3.018  0.00284 ** 
-## alexjoneslagged   0.156306   0.061719   2.533  0.01201 *  
-## alexjoneslagged2  0.325603   0.061718   5.276 3.13e-07 ***
-## SchoolShooting   -0.014927   0.012125  -1.231  0.21960    
-## GunControl        0.070426   0.027202   2.589  0.01026 *  
-## DonaldTrump       0.018409   0.007986   2.305  0.02208 *  
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## Residual standard error: 1.917 on 223 degrees of freedom
-##   (2 observations deleted due to missingness)
-## Multiple R-squared:  0.212,	Adjusted R-squared:  0.1944 
-## F-statistic:    12 on 5 and 223 DF,  p-value: 2.672e-10
-```
-
----
-
-```r
-bgtest(AlexJones~alexjoneslagged + alexjoneslagged2 + SchoolShooting + GunControl + DonaldTrump, 
-       data=ajgoogle2, order=12, type="Chisq", fill=NA)
-```
-
-```
-## 
-## 	Breusch-Godfrey test for serial correlation of order up to 12
-## 
-## data:  AlexJones ~ alexjoneslagged + alexjoneslagged2 + SchoolShooting +     GunControl + DonaldTrump
-## LM test = 6.8992, df = 12, p-value = 0.8642
-```
 
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
