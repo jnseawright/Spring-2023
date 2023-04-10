@@ -272,6 +272,12 @@ include_graphics("policyattitudesardl.jpg")
 
 ajgoogle2 <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/Spring 2023/2-Dynamic/alexjones2.csv")
 
+library(dplyr)
+
+ajgoogle2$X <- 1:nrow(ajgoogle2)
+
+ajgoogle2$AlexJones <- lm(AlexJones ~ X + I(X^2) + I(X^3), data=ajgoogle2)$resid
+
 ajgoogle2$alexjoneslagged <- NA
 
 for (i in 1:(nrow(ajgoogle2)-1)) {
@@ -284,10 +290,16 @@ for (i in 1:(nrow(ajgoogle2)-2)) {
      ajgoogle2$alexjoneslagged2[i+2] <- ajgoogle2$AlexJones[i]
 }
 ```
-
+---
 ```{r, echo = TRUE}
 summary(lm(AlexJones~alexjoneslagged + alexjoneslagged2 + SchoolShooting + GunControl + DonaldTrump, data=ajgoogle2))
 ```
+
+---
+```{r, echo = TRUE}
+summary(lm(AlexJones~X + I(X^2) + I(X^3), data=ajgoogle2))
+```
+
 
 ---
 ```{r, echo = TRUE}

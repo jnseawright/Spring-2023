@@ -4,7 +4,7 @@
     <title>2: Dynamic Time Series</title>
     <meta charset="utf-8" />
     <meta name="author" content="J. Seawright" />
-    <script src="2-Dynamic-Time-Series_files/header-attrs-2.18/header-attrs.js"></script>
+    <script src="2-Dynamic-Time-Series_files/header-attrs-2.21/header-attrs.js"></script>
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
@@ -24,7 +24,7 @@ class: center, middle, inverse, title-slide
 ### <small>Northwestern Political Science</small>
 ]
 .date[
-### Friday, 31 March, 2023
+### Monday, 10 April, 2023
 ]
 
 ---
@@ -340,13 +340,7 @@ Significant results on BG but the model doesn't include a lagged DV?
 
 ```r
 library(orcutt)
-```
 
-```
-## Warning: package 'orcutt' was built under R version 4.2.3
-```
-
-```r
 aj.nolag &lt;- lm(alexjones~donaldtrump + trumpapproval, data=ajgoogle)
 aj.co &lt;- cochrane.orcutt(aj.nolag)
 summary(aj.co)
@@ -406,7 +400,23 @@ If we can get good estimates of the error term in our regression, we can figure 
 
 ---
 
+```
+## 
+## Attaching package: 'dplyr'
+```
 
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+---
 
 ```r
 summary(lm(AlexJones~alexjoneslagged + alexjoneslagged2 + SchoolShooting + GunControl + DonaldTrump, data=ajgoogle2))
@@ -420,24 +430,52 @@ summary(lm(AlexJones~alexjoneslagged + alexjoneslagged2 + SchoolShooting + GunCo
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -3.8942 -0.7486 -0.1922  0.3358 20.6261 
+## -3.4926 -0.6818 -0.1503  0.2539 20.1480 
 ## 
 ## Coefficients:
 ##                   Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)       0.896189   0.296908   3.018  0.00284 ** 
-## alexjoneslagged   0.156306   0.061719   2.533  0.01201 *  
-## alexjoneslagged2  0.325603   0.061718   5.276 3.13e-07 ***
-## SchoolShooting   -0.014927   0.012125  -1.231  0.21960    
-## GunControl        0.070426   0.027202   2.589  0.01026 *  
-## DonaldTrump       0.018409   0.007986   2.305  0.02208 *  
+## (Intercept)      -0.531332   0.213738  -2.486  0.01366 *  
+## alexjoneslagged   0.108653   0.063134   1.721  0.08664 .  
+## alexjoneslagged2  0.276280   0.063318   4.363 1.96e-05 ***
+## SchoolShooting   -0.020433   0.011911  -1.716  0.08763 .  
+## GunControl        0.074556   0.026744   2.788  0.00576 ** 
+## DonaldTrump       0.014040   0.007771   1.807  0.07215 .  
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 1.917 on 223 degrees of freedom
+## Residual standard error: 1.886 on 223 degrees of freedom
 ##   (2 observations deleted due to missingness)
-## Multiple R-squared:  0.212,	Adjusted R-squared:  0.1944 
-## F-statistic:    12 on 5 and 223 DF,  p-value: 2.672e-10
+## Multiple R-squared:  0.1405,	Adjusted R-squared:  0.1213 
+## F-statistic: 7.292 on 5 and 223 DF,  p-value: 2.388e-06
 ```
+
+---
+
+```r
+summary(lm(AlexJones~X + I(X^2) + I(X^3), data=ajgoogle2))
+```
+
+```
+## 
+## Call:
+## lm(formula = AlexJones ~ X + I(X^2) + I(X^3), data = ajgoogle2)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -2.7660 -1.0836 -0.2142  0.1425 19.4251 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) -1.908e-16  5.395e-01       0        1
+## X            1.039e-17  2.009e-02       0        1
+## I(X^2)      -8.569e-20  2.010e-04       0        1
+## I(X^3)       1.882e-22  5.697e-07       0        1
+## 
+## Residual standard error: 2.017 on 227 degrees of freedom
+## Multiple R-squared:  3.657e-33,	Adjusted R-squared:  -0.01322 
+## F-statistic: 2.767e-31 on 3 and 227 DF,  p-value: 1
+```
+
 
 ---
 
@@ -451,7 +489,7 @@ bgtest(AlexJones~alexjoneslagged + alexjoneslagged2 + SchoolShooting + GunContro
 ## 	Breusch-Godfrey test for serial correlation of order up to 12
 ## 
 ## data:  AlexJones ~ alexjoneslagged + alexjoneslagged2 + SchoolShooting +     GunControl + DonaldTrump
-## LM test = 6.8992, df = 12, p-value = 0.8642
+## LM test = 6.5043, df = 12, p-value = 0.8886
 ```
 
     </textarea>
