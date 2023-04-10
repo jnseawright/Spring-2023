@@ -6,11 +6,7 @@ institute: "<small>Northwestern Political Science</small>"
 date: "`r format(Sys.Date(), '%A, %e %B, %Y')`"
 output: 
   xaringan::moon_reader:
-    css: 
-      - "shinobi"
-#output: 
-#  xaringan::moon_reader:
-#    css: xaringan-themer.css
+    css: xaringan-themer.css
      
 
 ---
@@ -35,7 +31,16 @@ library(DT)
 ajgoogle <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/ajgoogle.csv")
 ```
 
-
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+style_mono_accent(
+  base_color = "#1c5253",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono"),
+  text_font_size = "1.6rem"
+)
+```
 
 ---
 class: center, middle
