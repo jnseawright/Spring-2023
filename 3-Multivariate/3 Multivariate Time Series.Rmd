@@ -1,0 +1,348 @@
+---
+title: "3: Multivariate Time Series"
+subtitle: "Time Series and Panels"
+author: "<large>J. Seawright</large>"
+institute: "<small>Northwestern Political Science</small>" 
+date: "April 13, 2023"
+output: 
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+     
+
+---
+class: center, middle
+
+```{r, load_refs, include=FALSE, cache=FALSE}
+# Initializes the bibliography
+library(RefManageR)
+BibOptions(check.entries = FALSE,
+           bib.style = "authoryear", # Bibliography style
+           max.names = 3, # Max author names displayed in bibliography
+           sorting = "nyt", #Name, year, title sorting
+           cite.style = "authoryear", # citation style
+           style = "markdown",
+           hyperlink = FALSE,
+           dashed = FALSE)
+#myBib <- ReadBib("assets/myBib.bib", check = FALSE)
+# Note: don't forget to clear the knitr cache to account for changes in the
+# bibliography.
+library(DT)
+
+alexjones2 <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/alexjones2.csv")
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+style_mono_accent(
+  base_color = "#1c5253",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono"),
+  text_font_size = "1.6rem"
+)
+```
+
+
+---
+#Everything in social science affects pretty much everything else eventually.
+
+
+---
+#The Workhorse Model
+
+<br>
+<br>
+
+$$Y_{t} = \beta_{1} Y_{t-1} + \beta_{2} X_{t} +  \epsilon_{t}$$
+
+$$\epsilon_{t} = \rho \epsilon_{t-1} + \nu_{t}$$
+
+---
+#A Fork in the Road
+
+1. Structural equation modeling
+
+2. Vector autoregression
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("seq1.jpg")
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("seq2.jpg")
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("seq3.jpg")
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("var1.jpg")
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("var2.jpg")
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("var3.jpg")
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("var4.jpg")
+```
+
+---
+#Structural Equation Models
+
+1. Goal: use two-stage least squares to estimate all the equations in the model.
+
+2. 2SLS requires **instruments**.
+
+---
+```{r, echo = TRUE}
+library(dagitty)
+library(ggdag)
+library(ggplot2)
+
+ajdag <- dagitty("dag {
+  schoolshootings -> guncontrol
+  guncontrol -> alexjones
+  abortion -> alexjones
+  electionseason -> abortion
+  electionseason -> guncontrol
+  democraticincumbent -> guncontrol
+  alexjones -> democraticincumbent
+               }")
+```
+
+---
+```{r, echo = TRUE}
+ggdag(ajdag, text_col = "red")
+```
+
+---
+#2SLS
+
+$$\mathbf{Y} = \mathbf{\alpha X} + \mathbf{\beta W} + \mathbf{\epsilon}$$
+
+Form matrix $\mathbf{Z}$ from matrix $\mathbf{W}$ as well as at least one instrument per column in matrix $\mathbf{X}$.
+
+Estimate fitted values, $\hat{\mathbf{X}}$, from:
+
+$$\mathbf{X} = \gamma \mathbf{Z} + \nu$$
+
+---
+
+Estimate coefficients from:
+
+$$\mathbf{Y} = \mathbf{\alpha \hat{X}} + \mathbf{\beta W} + \mathbf{\epsilon}$$
+
+---
+```{r, echo = TRUE}
+library(sem)
+
+ajtsls <- tsls(AlexJones~GunControl + Abortion, ~SchoolShooting + Abortion, data=alexjones2)
+
+summary(ajtsls)
+
+```
+
+---
+```{r, echo = TRUE}
+ajlm <- lm(AlexJones~GunControl + Abortion, data=alexjones2)
+
+summary(ajlm)
+
+```
+
+---
+```{r, echo = TRUE}
+library(Hmisc)
+
+ajtsls2 <- tsls(AlexJones~GunControl + Abortion, ~SchoolShooting + Abortion + Lag(GunControl), data=alexjones2)
+
+```
+
+---
+```{r, echo = TRUE}
+summary(ajtsls2)
+```
+
+---
+```{r, echo = TRUE}
+ajtsls3 <- tsls(AlexJones~GunControl + Abortion, ~SchoolShooting + Abortion + Lag(GunControl)+Lag(GunControl,shift=2)+Lag(Abortion)+Lag(Abortion,shift=2), data=alexjones2)
+summary(ajtsls3)
+```
+
+---
+#Structural Equation Modeling
+
+1. Non-sample information
+
+2. Increased sensitivity to error
+
+
+
+---
+#Vector Autoregression
+
+<font size="5"> $$A_{t} = \beta_{0} + \beta_{1} B_{t} + \gamma_{1} A_{t-i} + \cdots + \gamma_{k} A_{t-k} + \theta_{1} B_{t-1} + \cdots + \theta_{j} B_{t-j} + \epsilon_{t}$$
+
+$$B_{t} = \chi_{0} + \chi_{1} A_{t} + \lambda_{1} B_{t-i} + \cdots + \lambda_{k} B_{t-k} + \delta_{1} A_{t-1} + \cdots + \delta_{j} A_{t-j} + \nu_{t}$$</font>
+
+---
+<font size="4">$$A_{t} = \frac{\beta_{0} + \beta_{1} \chi_{0} + (\beta_{1} \lambda_{1} + \theta_{1}) B_{t-i} + \cdots + (\beta_{1} \lambda_{k} + \theta_{k}) B_{t-k} + (\beta_{1} \delta_{1} + \gamma_{1})  A_{t-1} +}{1 - \beta_{1} \chi_{1}}$$</font>
+
+---
+#Vector Autoregression
+
+1. When there is no contemporaneous relationship between $A$ and $B$, the errors are white noise processes.
+
+2. When there is a contemporaneous relationship, the errors are correlated with each other.
+
+
+---
+#Vector Autoregression
+
+1. Choose a maximum lag length generously.
+
+2. Test downward using an information criterion like AIC
+
+---
+#Vector Autoregression
+
+1. If a sufficient maximum lag is chosen, the errors will usually be serially uncorrelated.
+
+2. Then, OLS regression can estimate the system.
+
+3. If there are exogenous regressors, SUR will also be consistent but will be more efficient.
+
+---
+#Vector Autoregression
+
+With VAR, estimation is usually about individual equations, but proper interpretation is about the system as a whole.
+
+---
+#Granger Causality
+
+Is $Y_{t}$ better predicted by the past history of $X$ and $Y$ than by the history of $Y$ alone?
+
+---
+#Innovation Accounting
+
+How does a one-time shock to the value of a single variable within the system affect the future values of that variable and of the other variables?
+
+---
+#Innovation Accounting
+
+1. Assumptions must be made about the ordering of variables within the VAR in terms of how contemporaneous shocks propagate instantaneously through the system.
+
+2. Standard errors come from time-series bootstrapping.
+
+---
+```{r, echo = TRUE}
+library(vars)
+```
+
+---
+```{r, echo = TRUE}
+lagselect <- VARselect(alexjones2[,3:17], lag.max = 48, type = "both")
+lagselect$selection
+
+```
+
+---
+```{r, echo = TRUE}
+ajvar <- VAR(alexjones2[,3:17], p = 13, type = "both", season = NULL, exog = NULL) 
+summary(ajvar)
+```
+
+---
+```{r, echo = TRUE}
+ajSerial1 <- serial.test(ajvar, lags.pt = 18, type = "PT.asymptotic")
+ajSerial1
+```
+
+---
+```{r, echo = TRUE}
+ajArch1 <- arch.test(ajvar, lags.multi = 15, multivariate.only = TRUE)
+ajArch1
+```
+
+---
+```{r, echo = TRUE}
+ajNorm1 <- normality.test(ajvar, multivariate.only = TRUE)
+ajNorm1
+```
+
+---
+```{r, echo = TRUE}
+causality(ajvar, cause = "AlexJones")
+```
+
+---
+```{r, echo = TRUE}
+causality(ajvar, cause = "Abortion")
+```
+---
+```{r, echo = TRUE}
+causality(ajvar, cause = "DonaldTrump")
+```
+
+---
+```{r, echo = TRUE}
+causality(ajvar, cause = "GunControl")
+```
+
+---
+```{r, echo = TRUE}
+ajirfssaj <- irf(ajvar, impulse = "SchoolShooting", response = "AlexJones", n.ahead = 10, boot = FALSE)
+plot(ajirfssaj, ylab = "Alex Jones", main = "School Shooting's shock to Alex Jones")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj <- irf(ajvar, impulse = "GunControl", response = "AlexJones", n.ahead = 10, boot = FALSE)
+plot(ajirfgcaj, ylab = "Alex Jones", main = "Gun Control's shock to Alex Jones")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj <- irf(ajvar, impulse = "Abortion", response = "AlexJones", n.ahead = 10, boot = FALSE)
+plot(ajirfgcaj, ylab = "Alex Jones", main = "Abortion's shock to Alex Jones")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj <- irf(ajvar, impulse = "BLM", response = "AlexJones", n.ahead = 10, boot = FALSE)
+plot(ajirfgcaj, ylab = "Alex Jones", main = "The Black Lives Matter movement's shock to Alex Jones")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj <- irf(ajvar, impulse = "DonaldTrump", response = "AlexJones", n.ahead = 10, boot = FALSE)
+plot(ajirfgcaj, ylab = "Alex Jones", main = "Donald Trump's shock to Alex Jones")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj <- irf(ajvar, impulse = "AlexJones", response = "DonaldTrump", n.ahead = 10, boot = FALSE)
+plot(ajirfgcaj, ylab = "Donald Trump", main = "Alex Jones's shock to Donald Trump")
+```
+
+
