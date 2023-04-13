@@ -345,4 +345,97 @@ ajirfgcaj <- irf(ajvar, impulse = "AlexJones", response = "DonaldTrump", n.ahead
 plot(ajirfgcaj, ylab = "Donald Trump", main = "Alex Jones's shock to Donald Trump")
 ```
 
+---
+```{r, echo = TRUE}
+ajsmall <- data.frame(AlexJones=log(alexjones2$AlexJones+1),
+                      SchoolShooting=log(alexjones2$SchoolShooting+1),
+                      GunControl=log(alexjones2$GunControl+1), 
+                      Abortion=log(alexjones2$Abortion+1),
+                      WEF=log(alexjones2$WEF+1), 
+                      Immigration=log(alexjones2$Immigration+1))
+```
 
+---
+```{r, echo = TRUE}
+library(Hmisc)
+ajsmall$AlexJones <- ajsmall$AlexJones - Lag(ajsmall$AlexJones)
+ajsmall$SchoolShooting <- ajsmall$SchoolShooting - Lag(ajsmall$SchoolShooting)
+ajsmall$GunControl <- ajsmall$GunControl - Lag(ajsmall$GunControl)
+ajsmall$Abortion <- ajsmall$Abortion - Lag(ajsmall$Abortion)
+ajsmall$WEF <- ajsmall$WEF - Lag(ajsmall$WEF)
+ajsmall$Immigration <- ajsmall$Immigration - Lag(ajsmall$Immigration)
+ajsmall <- na.omit(ajsmall)
+
+```
+
+---
+```{r, echo = TRUE}
+ajvar2 <- VAR(ajsmall, p = 5, type = "none", season = NULL, exog = NULL) 
+```
+
+---
+```{r, echo = TRUE}
+ajSerial2 <- serial.test(ajvar2, lags.pt = 60, type = "PT.asymptotic")
+ajSerial2
+```
+
+
+---
+```{r, echo = TRUE}
+ajirfgcaj2 <- irf(ajvar2, impulse = "GunControl", response = "AlexJones", n.ahead = 10, boot = TRUE)
+plot(ajirfgcaj2, ylab = "Alex Jones", main = "Gun Control's shock to Alex Jones")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj2 <- irf(ajvar2, impulse = "SchoolShooting", response = "AlexJones", n.ahead = 10, boot = TRUE)
+plot(ajirfgcaj2, ylab = "Alex Jones", main = "School Shooting's shock to Alex Jones")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj2 <- irf(ajvar2, impulse = "WEF", response = "AlexJones", n.ahead = 10, boot = TRUE)
+plot(ajirfgcaj2, ylab = "Alex Jones", main = "World Economic Forum's shock to Alex Jones")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj2 <- irf(ajvar2, impulse = "Abortion", response = "AlexJones", n.ahead = 10, boot = TRUE)
+plot(ajirfgcaj2, ylab = "Alex Jones", main = "Abortion's shock to Alex Jones")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj2 <- irf(ajvar2, impulse = "Immigration", response = "AlexJones", n.ahead = 10, boot = TRUE)
+plot(ajirfgcaj2, ylab = "Alex Jones", main = "Immigration's shock to Alex Jones")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj2 <- irf(ajvar2, impulse = "AlexJones", response = "GunControl", n.ahead = 10, boot = TRUE)
+plot(ajirfgcaj2, ylab = "Gun Control", main = "Alex Jones's shock to Gun Control")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj2 <- irf(ajvar2, impulse = "AlexJones", response = "SchoolShooting", n.ahead = 10, boot = TRUE)
+plot(ajirfgcaj2, ylab = "School Shooting", main = "Alex Jones's shock to School Shooting")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj2 <- irf(ajvar2, impulse = "AlexJones", response = "WEF", n.ahead = 10, boot = TRUE)
+plot(ajirfgcaj2, ylab = "World Economic Forum", main = "Alex Jones's shock to World Economic Forum")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj2 <- irf(ajvar2, impulse = "AlexJones", response = "Abortion", n.ahead = 10, boot = TRUE)
+plot(ajirfgcaj2, ylab = "Abortion", main = "Alex Jones's shock to Abortion")
+```
+
+---
+```{r, echo = TRUE}
+ajirfgcaj2 <- irf(ajvar2, impulse = "AlexJones", response = "Immigration", n.ahead = 10, boot = TRUE)
+plot(ajirfgcaj2, ylab = "Immigration", main = "Alex Jones's shock to Immigration")
+```
