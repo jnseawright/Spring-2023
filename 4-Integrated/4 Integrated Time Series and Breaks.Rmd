@@ -1,0 +1,422 @@
+---
+title: "4: Nonstationarity, Structural Breaks, and Cointegration"
+subtitle: "Time Series and Panels"
+author: "<large>J. Seawright</large>"
+institute: "<small>Northwestern Political Science</small>" 
+date: "April 20, 2023"
+output: 
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+
+---
+class: center, middle
+
+```{r, load_refs, include=FALSE, cache=FALSE}
+# Initializes the bibliography
+library(RefManageR)
+library(xtable)
+library(kableExtra)
+
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+BibOptions(check.entries = FALSE,
+           bib.style = "authoryear", # Bibliography style
+           max.names = 3, # Max author names displayed in bibliography
+           sorting = "nyt", #Name, year, title sorting
+           cite.style = "authoryear", # citation style
+           style = "markdown",
+           hyperlink = FALSE,
+           dashed = FALSE)
+#myBib <- ReadBib("assets/myBib.bib", check = FALSE)
+# Note: don't forget to clear the knitr cache to account for changes in the
+# bibliography.
+library(DT)
+
+alexjones2 <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/alexjones2.csv")
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+style_mono_accent(
+  base_color = "#1c5253",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono"),
+  text_font_size = "1.6rem"
+)
+```
+
+
+---
+#Stationary Processes
+
+1. The mean is not a function of time.
+2. The variance is not a function of time.
+3. The ACF is not a function of time.
+
+---
+#Integration
+
+* Unit root
+
+* AR parameter $=$ 1
+
+* Integration
+
+---
+#Integration
+
+Drift vs. Deterministic trend
+
+---
+
+If a time series is integrated order one, first-differencing it can make it stationary. Higher order integration can require more complicated differencing schemes for stationarity.
+
+---
+#KPSS Test
+
+$$y_{t} = \beta t + \nu_{t} + a_{t}$$
+
+$$\nu_{t} = \nu_{t-1} + \mu_{t}$$
+
+---
+#KPSS Test
+
+$a$ and $\mu$ are both assumed normal, iid, and stationary in the mean. $a$ has variance 1. Is the variance of $\mu$ zero?
+
+---
+#KPSS Test
+
+$$\eta_{i} = \frac{T^{-2} \sum_{t=1}^{T} S_{t}^{2}}{s_{T}^{2} (l)}$$
+
+$S_{t}$ is the partial sum of residuals of a regression of $y$ on an intercept or an intercept and a time trend.
+
+$s_{T}^{2} (l)$ is a consistent estimate of the error variance from that regression.
+
+---
+```{r, echo = TRUE}
+library(tseries)
+kpss.test(alexjones2$AlexJones)
+```
+
+--
+```{r, echo = TRUE}
+kpss.test(alexjones2$AlexJones, null = "Trend")
+```
+
+---
+#Dickey-Fuller Test
+
+$$y_{t} = \rho y_{t-1} + a_{t}$$
+
+---
+#Dickey-Fuller Test
+
+$$\delta y_{t} = (\rho - 1) y_{t-1} + a_{t} = \gamma y_{t} + a_{t}$$
+
+$t$-test of the hypothesis that $\gamma = 0$.
+
+---
+#Dickey-Fuller Test
+
+When there is a unit root, $\gamma$ is not normally distributed, so we can't use $t$ or $F$ distributions.
+
+---
+#Dickey-Fuller Test
+
+$$\delta y_{t} = \gamma y_{t} + a_{t}$$
+
+$$\delta y_{t} = c_{0} + \gamma y_{t} + a_{t}$$
+
+$$\delta y_{t} = c_{0} + \gamma y_{t} + \beta_{1} t + a_{t}$$
+
+
+---
+#Dickey-Fuller Test
+
+The null hypothesis is a unit root.
+
+--
+```{r, echo = TRUE}
+adf.test(alexjones2$AlexJones, k=0)
+```
+
+---
+#Augmented Dickey-Fuller Test
+
+Works when the process has more than one autoregressive lag.
+
+--
+```{r, echo = TRUE}
+adf.test(alexjones2$AlexJones)
+```
+
+
+---
+#Cochrane Variance Ratio Test
+
+$$VR_{k} = \frac{k^{-1} var(v_{t} - y_{t-k})}{var(y_{t} - y_{t-1}} (\frac{T}{T - k + 1})$$
+
+---
+#Lo R/S Test
+
+Null: strong mixing, stationary process
+
+$$\tilde{Q}_{t} = \frac{1}{\hat{\sigma_{T}}} [Max \sum_{t=1}^{k} (x_{t} - \bar{x}_{T}) - Min  \sum_{t=1}^{k} (x_{t} - \bar{x}_{T})]$$
+
+
+There are various estimates of $\sigma_{T}$. You need at least 250 observations.
+
+---
+#Cointegration
+
+If two or more series are individually integrated (in the time series sense) but some linear combination of them has a lower order of integration, then the series are said to be cointegrated.
+
+
+---
+#Engle-Granger Cointegration Test
+
+1. Test all series for integration.
+2. If two series are integrated, run a bivariate OLS regression.
+3. Test the residuals for stationarity.
+
+---
+```{r, echo = TRUE}
+adf.test(alexjones2$Abortion)
+```
+
+---
+```{r, echo = TRUE}
+adf.test(alexjones2$Immigration)
+```
+
+---
+```{r, echo = TRUE}
+library(egcm)
+
+egcm(alexjones2$Abortion, alexjones2$Immigration)
+```
+
+---
+#ECM
+
+1. Take the error term from the bivariate regression in the cointegration test.
+2. Add that error term as an exogenous predictor variable to a first-differenced version of the model of interest.
+
+---
+#ECM
+
+$$\mathbf{X}_{t} = \mathbf{A}_{1} \mathbf{X}_{t-1} + \mathbf{\epsilon}_{t}$$
+
+---
+#ECM
+
+$$\delta \mathbf{X}_{t} = \mathbf{A}_{1} \mathbf{X}_{t-1} - \mathbf{X}_{t-1} + \mathbf{\epsilon}_{t}$$
+
+---
+#ECM
+
+$$\delta \mathbf{X}_{t} = \mathbf{\pi}\mathbf{X}_{t-1} + \mathbf{\epsilon}_{t}$$
+
+---
+#ECM
+
+The \emph{rank} of the matrix $\mathbf{\pi}$ determines whether there is cointegration.
+
+
+---
+```{r, echo = TRUE}
+library(ecm)
+
+trn <- Wilshire[Wilshire$date<='2015-12-01',]
+#Assume all predictors are needed in the equilibrium and transient terms of ecm. 
+xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')] 
+model1 <- ecm(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
+summary(model1)
+```
+
+---
+```{r, echo = TRUE}
+#Assume CorpProfits and FedFundsRate are in the equilibrium term, #UnempRate has only transient impacts. 
+xeq <- trn[c('CorpProfits', 'FedFundsRate')] 
+xtr <- trn['UnempRate'] 
+model2 <- ecm(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
+summary(model2)
+```
+
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("museums1.jpg")
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("museums2.jpg")
+```
+
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("museums3.jpg")
+```
+
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("museums4.jpg")
+```
+
+
+---
+
+ECMs without cointegration?
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("sorokaajps.jpg")
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("sorokaecm1.jpg")
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("sorokaecm2.jpg")
+```
+
+
+---
+#Structural Breaks
+
+Maybe there is nonstationarity because the underlying model structure changes at some unknown time point?
+
+---
+```{r, echo = TRUE}
+xsim <- 1:200
+ysim <- rep(NA, 200)
+
+ysim[1:100] <- rnorm(100,0,1)
+ysim[101:200] <- rnorm(100,2,1)
+```
+
+---
+```{r, echo = TRUE}
+plot(ysim~xsim)
+```
+
+---
+#Structural Breaks
+
+1. Split the data at every possible time point that has enough data points both above and below it to estimate the model of interest on both sides.
+2. Estimate the model of interest on both sides. Calculate the sum of squared errors across **both** of these regressions, $ESS$.
+3. Estimate the model of interest pooling all the observations together, and calculate the sum of squared errors for this regression, $RSS$.
+4. Calculate $F = \frac{(RSS - ESS)}{ESS/(n - 2k)}$
+
+---
+#Structural Breaks
+
+5. $F/k$ follows the $F$ distribution with $k$ and $n-2k$ degrees of freedom.
+
+---
+```{r, echo = TRUE}
+library(strucchange)
+fs.sim<-Fstats(ysim~xsim) 
+```
+
+---
+```{r, echo = TRUE}
+plot(fs.sim) 
+lines(breakpoints(fs.sim))
+```
+
+---
+```{r, echo = TRUE}
+sctest(fs.sim)
+```
+
+
+---
+```{r, echo = TRUE}
+fs.aj<-Fstats(AlexJones ~ GunControl + Abortion + Immigration + DonaldTrump, data=alexjones2)
+plot(fs.aj) 
+lines(breakpoints(fs.aj))
+
+```
+
+---
+#Regime Change Models
+
+What if we want to move this process of change in the model parameters from being a design feature that lives outside the model to being a feature of the model itself, such that we can model switching between different states?
+
+---
+$$z_{t} = \begin{cases}
+\alpha_{0} + \beta z_{t-1} + \epsilon_{t},              & s_{t} = 0\\    
+\alpha_{0} + \alpha_{1} + \beta z_{t-1} + \epsilon_{t}, & s_{t} = 1   
+\end{cases}$$
+
+---
+#Regime Change Models
+
+Different sequences of $s$ create different patterns of structural breaks here!
+
+---
+#Regime Change Models
+
+We can further generalize the model by allowing the two regressions to include covariates, whose slopes may also differ between the two equations.
+
+
+---
+```{r, echo = TRUE}
+library(MSwM)
+alexlm <- lm(AlexJones ~ Abortion + DonaldTrump, data=alexjones2) 
+alexswitching <- msmFit(alexlm,k=2,sw=rep(TRUE,4))
+```
+
+---
+```{r, echo = FALSE}
+summary(alexswitching)
+```
+
+---
+
+```{r, echo = FALSE}
+plot(alexswitching)
+```
+
+---
+
+```{r, echo = FALSE}
+plotProb(alexswitching, which=1)
+```
+
+---
+
+```{r, echo = FALSE}
+plotDiag(alexswitching, which=1)
+```
+
+---
+
+```{r, echo = FALSE}
+plotDiag(alexswitching, which=2)
+```
+
+---
+
+```{r, echo = FALSE}
+plotDiag(alexswitching, which=3)
+```

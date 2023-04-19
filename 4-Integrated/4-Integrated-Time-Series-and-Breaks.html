@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>4: Nonstationarity, Structural Breaks, and Cointegration</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="J. Seawright" />
+    <meta name="date" content="2023-04-20" />
+    <script src="4-Integrated-Time-Series-and-Breaks_files/header-attrs-2.21/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# 4: Nonstationarity, Structural Breaks, and Cointegration
+]
+.subtitle[
+## Time Series and Panels
+]
+.author[
+### <large>J. Seawright</large>
+]
+.institute[
+### <small>Northwestern Political Science</small>
+]
+.date[
+### April 20, 2023
+]
+
+---
+
+class: center, middle
+
+
+
+
+
+
+---
+#Stationary Processes
+
+1. The mean is not a function of time.
+2. The variance is not a function of time.
+3. The ACF is not a function of time.
+
+---
+#Integration
+
+* Unit root
+
+* AR parameter `\(=\)` 1
+
+* Integration
+
+---
+#Integration
+
+Drift vs. Deterministic trend
+
+---
+
+If a time series is integrated order one, first-differencing it can make it stationary. Higher order integration can require more complicated differencing schemes for stationarity.
+
+---
+#KPSS Test
+
+`$$y_{t} = \beta t + \nu_{t} + a_{t}$$`
+
+`$$\nu_{t} = \nu_{t-1} + \mu_{t}$$`
+
+---
+#KPSS Test
+
+`\(a\)` and `\(\mu\)` are both assumed normal, iid, and stationary in the mean. `\(a\)` has variance 1. Is the variance of `\(\mu\)` zero?
+
+---
+#KPSS Test
+
+`$$\eta_{i} = \frac{T^{-2} \sum_{t=1}^{T} S_{t}^{2}}{s_{T}^{2} (l)}$$`
+
+`\(S_{t}\)` is the partial sum of residuals of a regression of `\(y\)` on an intercept or an intercept and a time trend.
+
+`\(s_{T}^{2} (l)\)` is a consistent estimate of the error variance from that regression.
+
+---
+
+```r
+library(tseries)
+```
+
+```
+## Registered S3 method overwritten by 'quantmod':
+##   method            from
+##   as.zoo.data.frame zoo
+```
+
+```r
+kpss.test(alexjones2$AlexJones)
+```
+
+```
+## Warning in kpss.test(alexjones2$AlexJones): p-value smaller than printed
+## p-value
+```
+
+```
+## 
+## 	KPSS Test for Level Stationarity
+## 
+## data:  alexjones2$AlexJones
+## KPSS Level = 0.84831, Truncation lag parameter = 4, p-value = 0.01
+```
+
+--
+
+```r
+kpss.test(alexjones2$AlexJones, null = "Trend")
+```
+
+```
+## 
+## 	KPSS Test for Trend Stationarity
+## 
+## data:  alexjones2$AlexJones
+## KPSS Trend = 0.18458, Truncation lag parameter = 4, p-value = 0.02178
+```
+
+---
+#Dickey-Fuller Test
+
+`$$y_{t} = \rho y_{t-1} + a_{t}$$`
+
+---
+#Dickey-Fuller Test
+
+`$$\delta y_{t} = (\rho - 1) y_{t-1} + a_{t} = \gamma y_{t} + a_{t}$$`
+
+`\(t\)`-test of the hypothesis that `\(\gamma = 0\)`.
+
+---
+#Dickey-Fuller Test
+
+When there is a unit root, `\(\gamma\)` is not normally distributed, so we can't use `\(t\)` or `\(F\)` distributions.
+
+---
+#Dickey-Fuller Test
+
+`$$\delta y_{t} = \gamma y_{t} + a_{t}$$`
+
+`$$\delta y_{t} = c_{0} + \gamma y_{t} + a_{t}$$`
+
+`$$\delta y_{t} = c_{0} + \gamma y_{t} + \beta_{1} t + a_{t}$$`
+
+
+---
+#Dickey-Fuller Test
+
+The null hypothesis is a unit root.
+
+--
+
+```r
+adf.test(alexjones2$AlexJones, k=0)
+```
+
+```
+## Warning in adf.test(alexjones2$AlexJones, k = 0): p-value smaller than printed
+## p-value
+```
+
+```
+## 
+## 	Augmented Dickey-Fuller Test
+## 
+## data:  alexjones2$AlexJones
+## Dickey-Fuller = -12.21, Lag order = 0, p-value = 0.01
+## alternative hypothesis: stationary
+```
+
+---
+#Augmented Dickey-Fuller Test
+
+Works when the process has more than one autoregressive lag.
+
+--
+
+```r
+adf.test(alexjones2$AlexJones)
+```
+
+```
+## Warning in adf.test(alexjones2$AlexJones): p-value smaller than printed p-value
+```
+
+```
+## 
+## 	Augmented Dickey-Fuller Test
+## 
+## data:  alexjones2$AlexJones
+## Dickey-Fuller = -4.4869, Lag order = 6, p-value = 0.01
+## alternative hypothesis: stationary
+```
+
+
+---
+#Cochrane Variance Ratio Test
+
+`$$VR_{k} = \frac{k^{-1} var(v_{t} - y_{t-k})}{var(y_{t} - y_{t-1}} (\frac{T}{T - k + 1})$$`
+
+---
+#Lo R/S Test
+
+Null: strong mixing, stationary process
+
+`$$\tilde{Q}_{t} = \frac{1}{\hat{\sigma_{T}}} [Max \sum_{t=1}^{k} (x_{t} - \bar{x}_{T}) - Min  \sum_{t=1}^{k} (x_{t} - \bar{x}_{T})]$$`
+
+
+There are various estimates of `\(\sigma_{T}\)`. You need at least 250 observations.
+
+---
+#Cointegration
+
+If two or more series are individually integrated (in the time series sense) but some linear combination of them has a lower order of integration, then the series are said to be cointegrated.
+
+
+---
+#Engle-Granger Cointegration Test
+
+1. Test all series for integration.
+2. If two series are integrated, run a bivariate OLS regression.
+3. Test the residuals for stationarity.
+
+---
+
+```r
+adf.test(alexjones2$Abortion)
+```
+
+```
+## Warning in adf.test(alexjones2$Abortion): p-value smaller than printed p-value
+```
+
+```
+## 
+## 	Augmented Dickey-Fuller Test
+## 
+## data:  alexjones2$Abortion
+## Dickey-Fuller = -5.2587, Lag order = 6, p-value = 0.01
+## alternative hypothesis: stationary
+```
+
+---
+
+```r
+adf.test(alexjones2$Immigration)
+```
+
+```
+## Warning in adf.test(alexjones2$Immigration): p-value smaller than printed
+## p-value
+```
+
+```
+## 
+## 	Augmented Dickey-Fuller Test
+## 
+## data:  alexjones2$Immigration
+## Dickey-Fuller = -4.3012, Lag order = 6, p-value = 0.01
+## alternative hypothesis: stationary
+```
+
+---
+
+```r
+library(egcm)
+```
+
+```
+## Loading required package: zoo
+```
+
+```
+## 
+## Attaching package: 'zoo'
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     as.Date, as.Date.numeric
+```
+
+```
+## Loading required package: xts
+```
+
+```
+## 
+## ################################### WARNING ###################################
+## # We noticed you have dplyr installed. The dplyr lag() function breaks how    #
+## # base R's lag() function is supposed to work, which breaks lag(my_xts).      #
+## #                                                                             #
+## # If you call library(dplyr) later in this session, then calls to lag(my_xts) #
+## # that you enter or source() into this session won't work correctly.          #
+## #                                                                             #
+## # All package code is unaffected because it is protected by the R namespace   #
+## # mechanism.                                                                  #
+## #                                                                             #
+## # Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
+## #                                                                             #
+## # You can use stats::lag() to make sure you're not using dplyr::lag(), or you #
+## # can add conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop   #
+## # dplyr from breaking base R's lag() function.                                #
+## ################################### WARNING ###################################
+```
+
+```r
+egcm(alexjones2$Abortion, alexjones2$Immigration)
+```
+
+```
+## Warning in pp.test(X): p-value smaller than printed p-value
+
+## Warning in pp.test(X): p-value smaller than printed p-value
+```
+
+```
+## Y[i] =   0.1942 X[i] +  19.0763 + R[i], R[i] =   0.7447 R[i-1] + eps[i], eps ~ N(0,  5.3701^2)
+##         (0.0825)        (2.9696)                (0.0451)
+## 
+## R[231] = -5.7950 (t = -0.738)
+## 
+## WARNING: X does not seem to be integrated. Y does not seem to be integrated. X and Y do not appear to be cointegrated.
+```
+
+---
+#ECM
+
+1. Take the error term from the bivariate regression in the cointegration test.
+2. Add that error term as an exogenous predictor variable to a first-differenced version of the model of interest.
+
+---
+#ECM
+
+`$$\mathbf{X}_{t} = \mathbf{A}_{1} \mathbf{X}_{t-1} + \mathbf{\epsilon}_{t}$$`
+
+---
+#ECM
+
+`$$\delta \mathbf{X}_{t} = \mathbf{A}_{1} \mathbf{X}_{t-1} - \mathbf{X}_{t-1} + \mathbf{\epsilon}_{t}$$`
+
+---
+#ECM
+
+`$$\delta \mathbf{X}_{t} = \mathbf{\pi}\mathbf{X}_{t-1} + \mathbf{\epsilon}_{t}$$`
+
+---
+#ECM
+
+The \emph{rank} of the matrix `\(\mathbf{\pi}\)` determines whether there is cointegration.
+
+
+---
+
+```r
+library(ecm)
+
+trn &lt;- Wilshire[Wilshire$date&lt;='2015-12-01',]
+#Assume all predictors are needed in the equilibrium and transient terms of ecm. 
+xeq &lt;- xtr &lt;- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')] 
+model1 &lt;- ecm(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
+summary(model1)
+```
+
+```
+## 
+## Call:
+## lm(formula = dy ~ ., data = x, weights = weights)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -6.9223 -0.6088  0.0210  0.6822  3.9381 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)       -0.4160213  0.8236705  -0.505 0.614155    
+## deltaCorpProfits   0.0119853  0.0020332   5.895 1.97e-08 ***
+## deltaFedFundsRate -0.1231619  0.1547487  -0.796 0.427210    
+## deltaUnempRate    -1.4841457  0.4389805  -3.381 0.000896 ***
+## CorpProfitsLag1    0.0027077  0.0008258   3.279 0.001265 ** 
+## FedFundsRateLag1   0.0655636  0.0494706   1.325 0.186849    
+## UnempRateLag1     -0.0532751  0.1040916  -0.512 0.609448    
+## yLag1             -0.0337028  0.0192679  -1.749 0.082066 .  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.711 on 170 degrees of freedom
+## Multiple R-squared:  0.2919,	Adjusted R-squared:  0.2628 
+## F-statistic: 10.01 on 7 and 170 DF,  p-value: 1.885e-10
+```
+
+---
+
+```r
+#Assume CorpProfits and FedFundsRate are in the equilibrium term, #UnempRate has only transient impacts. 
+xeq &lt;- trn[c('CorpProfits', 'FedFundsRate')] 
+xtr &lt;- trn['UnempRate'] 
+model2 &lt;- ecm(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
+summary(model2)
+```
+
+```
+## 
+## Call:
+## lm(formula = dy ~ ., data = x, weights = weights)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -13.2417  -0.4973  -0.0965   0.6701   4.2165 
+## 
+## Coefficients:
+##                    Estimate Std. Error t value Pr(&gt;|t|)   
+## (Intercept)      -0.1545105  0.4844623  -0.319  0.75016   
+## deltaUnempRate   -1.2572207  0.4188929  -3.001  0.00309 **
+## CorpProfitsLag1   0.0025252  0.0007604   3.321  0.00109 **
+## FedFundsRateLag1  0.0069759  0.0522913   0.133  0.89403   
+## yLag1            -0.0369253  0.0171322  -2.155  0.03252 * 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.862 on 173 degrees of freedom
+## Multiple R-squared:  0.147,	Adjusted R-squared:  0.1273 
+## F-statistic: 7.452 on 4 and 173 DF,  p-value: 1.462e-05
+```
+
+
+---
+&lt;img src="museums1.jpg" width="100%" /&gt;
+
+---
+&lt;img src="museums2.jpg" width="100%" /&gt;
+
+
+---
+&lt;img src="museums3.jpg" width="100%" /&gt;
+
+
+---
+&lt;img src="museums4.jpg" width="100%" /&gt;
+
+
+---
+
+ECMs without cointegration?
+
+---
+&lt;img src="sorokaajps.jpg" width="100%" /&gt;
+
+---
+&lt;img src="sorokaecm1.jpg" width="100%" /&gt;
+
+---
+&lt;img src="sorokaecm2.jpg" width="100%" /&gt;
+
+
+---
+#Structural Breaks
+
+Maybe there is nonstationarity because the underlying model structure changes at some unknown time point?
+
+---
+
+```r
+xsim &lt;- 1:200
+ysim &lt;- rep(NA, 200)
+
+ysim[1:100] &lt;- rnorm(100,0,1)
+ysim[101:200] &lt;- rnorm(100,2,1)
+```
+
+---
+
+```r
+plot(ysim~xsim)
+```
+
+![](4-Integrated-Time-Series-and-Breaks_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+
+---
+#Structural Breaks
+
+1. Split the data at every possible time point that has enough data points both above and below it to estimate the model of interest on both sides.
+2. Estimate the model of interest on both sides. Calculate the sum of squared errors across **both** of these regressions, `\(ESS\)`.
+3. Estimate the model of interest pooling all the observations together, and calculate the sum of squared errors for this regression, `\(RSS\)`.
+4. Calculate `\(F = \frac{(RSS - ESS)}{ESS/(n - 2k)}\)`
+
+---
+#Structural Breaks
+
+5. `\(F/k\)` follows the `\(F\)` distribution with `\(k\)` and `\(n-2k\)` degrees of freedom.
+
+---
+
+```r
+library(strucchange)
+```
+
+```
+## Loading required package: sandwich
+```
+
+```r
+fs.sim&lt;-Fstats(ysim~xsim) 
+```
+
+---
+
+```r
+plot(fs.sim) 
+lines(breakpoints(fs.sim))
+```
+
+![](4-Integrated-Time-Series-and-Breaks_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
+
+---
+
+```r
+sctest(fs.sim)
+```
+
+```
+## 
+## 	supF test
+## 
+## data:  fs.sim
+## sup.F = 66.336, p-value = 1.273e-13
+```
+
+
+---
+
+```r
+fs.aj&lt;-Fstats(AlexJones ~ GunControl + Abortion + Immigration + DonaldTrump, data=alexjones2)
+plot(fs.aj) 
+lines(breakpoints(fs.aj))
+```
+
+![](4-Integrated-Time-Series-and-Breaks_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
+
+---
+#Regime Change Models
+
+What if we want to move this process of change in the model parameters from being a design feature that lives outside the model to being a feature of the model itself, such that we can model switching between different states?
+
+---
+`$$z_{t} = \begin{cases}
+\alpha_{0} + \beta z_{t-1} + \epsilon_{t},              &amp; s_{t} = 0\\    
+\alpha_{0} + \alpha_{1} + \beta z_{t-1} + \epsilon_{t}, &amp; s_{t} = 1   
+\end{cases}$$`
+
+---
+#Regime Change Models
+
+Different sequences of `\(s\)` create different patterns of structural breaks here!
+
+---
+#Regime Change Models
+
+We can further generalize the model by allowing the two regressions to include covariates, whose slopes may also differ between the two equations.
+
+
+---
+
+```r
+library(MSwM)
+```
+
+```
+## Loading required package: parallel
+```
+
+```r
+alexlm &lt;- lm(AlexJones ~ Abortion + DonaldTrump, data=alexjones2) 
+alexswitching &lt;- msmFit(alexlm,k=2,sw=rep(TRUE,4))
+```
+
+---
+
+```
+## Markov Switching Model
+## 
+## Call: msmFit(object = alexlm, k = 2, sw = rep(TRUE, 4))
+## 
+##        AIC      BIC    logLik
+##   735.2579 788.5669 -361.6289
+## 
+## Coefficients:
+## 
+## Regime 1 
+## ---------
+##                Estimate Std. Error t value  Pr(&gt;|t|)    
+## (Intercept)(S)   2.4268     0.1564 15.5166 &lt; 2.2e-16 ***
+## Abortion(S)     -0.0187     0.0094 -1.9894   0.04666 *  
+## DonaldTrump(S)   0.0228     0.0038  6.0000 1.973e-09 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8783695
+## Multiple R-squared: 0.1701
+## 
+## Standardized Residuals:
+##        Min         Q1        Med         Q3        Max 
+## -2.0758112 -0.5923921 -0.1463339  0.7750329  2.6238177 
+## 
+## Regime 2 
+## ---------
+##                Estimate Std. Error t value Pr(&gt;|t|)   
+## (Intercept)(S) -14.1040     6.7096 -2.1021 0.035545 * 
+## Abortion(S)      1.3697     0.4502  3.0424 0.002347 **
+## DonaldTrump(S)   0.2883     0.1107  2.6043 0.009206 **
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 3.639569
+## Multiple R-squared: 0.4109
+## 
+## Standardized Residuals:
+##          Min           Q1          Med           Q3          Max 
+## -4.909571232 -0.235976363 -0.119807853  0.006391283  7.621103783 
+## 
+## Transition probabilities:
+##            Regime 1  Regime 2
+## Regime 1 0.96269534 0.3680761
+## Regime 2 0.03730466 0.6319239
+```
+
+---
+
+![](4-Integrated-Time-Series-and-Breaks_files/figure-html/unnamed-chunk-25-1.png)&lt;!-- --&gt;
+
+---
+
+![](4-Integrated-Time-Series-and-Breaks_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
+
+---
+
+![](4-Integrated-Time-Series-and-Breaks_files/figure-html/unnamed-chunk-27-1.png)&lt;!-- --&gt;
+
+---
+
+![](4-Integrated-Time-Series-and-Breaks_files/figure-html/unnamed-chunk-28-1.png)&lt;!-- --&gt;
+
+---
+
+![](4-Integrated-Time-Series-and-Breaks_files/figure-html/unnamed-chunk-29-1.png)&lt;!-- --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create();
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
