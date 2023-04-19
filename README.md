@@ -7,3 +7,5 @@ Week three: <a href="https://jnseawright.github.io/Spring-2023/3-Multivariate/3-
 Week four: <a href="https://jnseawright.github.io/Spring-2023/4-Integrated/4-Integrated-Time-Series-and-Breaks.html#1">Integrated Time Series and Breaks</a> slides.
 
 <a href="https://jnseawright.github.io/Spring-2023/Labs/Lab 1.pdf">Lab 1</a> .
+
+<a href="https://jnseawright.github.io/Spring-2023/Labs/Lab 2.pdf">Lab 2</a> .
