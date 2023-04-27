@@ -225,7 +225,7 @@ $$\delta \mathbf{X}_{t} = \mathbf{\pi}\mathbf{X}_{t-1} + \mathbf{\epsilon}_{t}$$
 ---
 #ECM
 
-The \emph{rank} of the matrix $\mathbf{\pi}$ determines whether there is cointegration.
+The **rank** of the matrix $\mathbf{\pi}$ determines whether there is cointegration.
 
 
 ---

@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>5: Beginning with Panels</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="J. Seawright" />
+    <meta name="date" content="2023-04-27" />
+    <script src="5Panels_files/header-attrs-2.21/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# 5: Beginning with Panels
+]
+.subtitle[
+## Time Series and Panels
+]
+.author[
+### <large>J. Seawright</large>
+]
+.institute[
+### <small>Northwestern Political Science</small>
+]
+.date[
+### April 27, 2023
+]
+
+---
+
+class: center, middle
+
+
+
+
+
+
+---
+### Types of Panel Data Structures
+
+1.  Pooled time series
+
+2.  Linked, repeated cross-sections
+
+
+---
+### Pooled Models
+
+`$$Y_{i,t} = \alpha + \beta \mathbf{X}_{i,t} + \epsilon_{i,t}$$`
+
+---
+
+```r
+rightplotslmpooled1 &lt;- lm(rightwingplots ~ I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24,
+                          data=usrightplotsexpanded)
+
+summary(rightplotslmpooled1)
+```
+
+```
+## 
+## Call:
+## lm(formula = rightwingplots ~ I(whitealone/totalpop) + I((whitealone/totalpop)^2) + 
+##     unemployment24, data = usrightplotsexpanded)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.0047 -0.7059 -0.4480  0.1750 12.6556 
+## 
+## Coefficients:
+##                            Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                -1.61892    0.56837  -2.848  0.00447 ** 
+## I(whitealone/totalpop)      8.64172    1.69417   5.101 3.94e-07 ***
+## I((whitealone/totalpop)^2) -6.71400    1.23921  -5.418 7.31e-08 ***
+## unemployment24             -0.04738    0.02439  -1.943  0.05231 .  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.42 on 1172 degrees of freedom
+##   (1862 observations deleted due to missingness)
+## Multiple R-squared:  0.02605,	Adjusted R-squared:  0.02356 
+## F-statistic: 10.45 on 3 and 1172 DF,  p-value: 8.725e-07
+```
+
+---
+
+```r
+rightplotslmpooled2 &lt;- lm(rightwingplots ~ I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            I(blackalone/totalpop) +
+                            I((blackalone/totalpop)^2) +
+                            unemployment24,
+                          data=usrightplotsexpanded)
+
+summary(rightplotslmpooled2)
+```
+
+```
+## 
+## Call:
+## lm(formula = rightwingplots ~ I(whitealone/totalpop) + I((whitealone/totalpop)^2) + 
+##     I(blackalone/totalpop) + I((blackalone/totalpop)^2) + unemployment24, 
+##     data = usrightplotsexpanded)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.0442 -0.7100 -0.4370  0.1847 12.6328 
+## 
+## Coefficients:
+##                            Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                -1.85322    0.75896  -2.442 0.014762 *  
+## I(whitealone/totalpop)     10.31593    2.84182   3.630 0.000296 ***
+## I((whitealone/totalpop)^2) -8.21811    2.22018  -3.702 0.000224 ***
+## I(blackalone/totalpop)     -1.22293    1.57420  -0.777 0.437401    
+## I((blackalone/totalpop)^2)  1.23041    2.77884   0.443 0.658008    
+## unemployment24             -0.04649    0.02477  -1.877 0.060802 .  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.42 on 1170 degrees of freedom
+##   (1862 observations deleted due to missingness)
+## Multiple R-squared:  0.02709,	Adjusted R-squared:  0.02293 
+## F-statistic: 6.516 on 5 and 1170 DF,  p-value: 5.482e-06
+```
+
+
+
+---
+### Heterogeneity
+
+`$$Y_{i,t} = \alpha_{i} + \beta_{i} \mathbf{X}_{i,t} + \epsilon_{i,t}$$`
+
+
+---
+### Fixed Effects
+
+`$$Y_{i,t} = \alpha_{i} + \beta \mathbf{X}_{i,t} + \epsilon_{i,t}$$`
+
+
+---
+
+```r
+rightplotslmfe1 &lt;- lm(rightwingplots ~ state + I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24,
+                          data=usrightplotsexpanded)
+
+summary(rightplotslmfe1)
+```
+
+```
+## 
+## Call:
+## lm(formula = rightwingplots ~ state + I(whitealone/totalpop) + 
+##     I((whitealone/totalpop)^2) + unemployment24, data = usrightplotsexpanded)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.0037 -0.6049 -0.2189  0.2609 12.0940 
+## 
+## Coefficients:
+##                             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                 -0.77647    2.90338  -0.267 0.789181    
+## stateAlaska                 -0.35596    0.35623  -0.999 0.317897    
+## stateArizona                 1.99366    0.43477   4.586 5.03e-06 ***
+## stateArkansas                0.73749    0.38958   1.893 0.058612 .  
+## stateDelaware               -0.36493    0.35972  -1.014 0.310573    
+## stateDistrict of Columbia   -0.77068    0.89766  -0.859 0.390775    
+## stateFlorida                 2.23149    0.38446   5.804 8.39e-09 ***
+## stateGeorgia                -0.09569    0.36894  -0.259 0.795407    
+## stateHawaii                 -1.47556    1.31905  -1.119 0.263527    
+## stateIdaho                   2.55827    0.55889   4.577 5.23e-06 ***
+## stateIllinois                1.05958    0.37799   2.803 0.005147 ** 
+## stateIndiana                 1.86214    0.45494   4.093 4.56e-05 ***
+## stateIowa                    2.23148    0.54284   4.111 4.23e-05 ***
+## stateKansas                  1.66500    0.46523   3.579 0.000360 ***
+## stateKentucky                1.85533    0.47863   3.876 0.000112 ***
+## stateLouisiana              -0.75749    0.37301  -2.031 0.042517 *  
+## stateMaine                   2.62128    0.58423   4.487 7.97e-06 ***
+## stateMaryland               -0.96287    0.37996  -2.534 0.011407 *  
+## stateMassachusetts           1.55966    0.43327   3.600 0.000332 ***
+## stateMichigan                1.17642    0.39244   2.998 0.002779 ** 
+## stateMinnesota               1.95498    0.46779   4.179 3.15e-05 ***
+## stateMississippi            -0.90401    0.39916  -2.265 0.023715 *  
+## stateMissouri                1.28789    0.42312   3.044 0.002390 ** 
+## stateMontana                 2.97449    0.49182   6.048 1.99e-09 ***
+## stateNebraska                1.72857    0.50234   3.441 0.000601 ***
+## stateNevada                  1.35717    0.39007   3.479 0.000522 ***
+## stateNew Hampshire           2.51573    0.57070   4.408 1.14e-05 ***
+## stateNew Jersey              0.44876    0.36493   1.230 0.219061    
+## stateNew Mexico              1.03183    0.41853   2.465 0.013834 *  
+## stateNew York                0.89568    0.35672   2.511 0.012182 *  
+## stateNorth Carolina          0.32763    0.35670   0.918 0.358556    
+## stateNorth Dakota            1.69226    0.50248   3.368 0.000783 ***
+## stateOhio                    1.65504    0.42033   3.938 8.74e-05 ***
+## stateOklahoma                0.43505    0.37307   1.166 0.243806    
+## stateOregon                  3.13487    0.48488   6.465 1.50e-10 ***
+## statePennsylvania            1.70760    0.42537   4.014 6.35e-05 ***
+## stateSouth Carolina         -0.40670    0.35784  -1.137 0.255981    
+## stateTennessee               1.58528    0.38597   4.107 4.29e-05 ***
+## stateTexas                   3.08989    0.39848   7.754 1.97e-14 ***
+## stateUtah                    2.20440    0.52673   4.185 3.07e-05 ***
+## stateVermont                 2.63556    0.58405   4.513 7.07e-06 ***
+## stateVirginia                0.38617    0.35881   1.076 0.282045    
+## I(whitealone/totalpop)      14.49272    7.28495   1.989 0.046897 *  
+## I((whitealone/totalpop)^2) -16.41490    4.75353  -3.453 0.000574 ***
+## unemployment24              -0.10193    0.02600  -3.921 9.36e-05 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.328 on 1131 degrees of freedom
+##   (1862 observations deleted due to missingness)
+## Multiple R-squared:  0.1772,	Adjusted R-squared:  0.1452 
+## F-statistic: 5.536 on 44 and 1131 DF,  p-value: &lt; 2.2e-16
+```
+
+
+---
+
+```r
+library(plm)
+```
+
+```
+## 
+## Attaching package: 'plm'
+```
+
+```
+## The following objects are masked from 'package:dplyr':
+## 
+##     between, lag, lead
+```
+
+```r
+rightplotslmfe2 &lt;- plm(rightwingplots ~ state + I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24,
+                          effect = "individual",
+                          model = "within",
+                          data=usrightplotsexpanded,
+                          index=c("state","year"))
+```
+
+---
+
+```r
+summary(rightplotslmfe2)
+```
+
+```
+## Oneway (individual) effect Within Model
+## 
+## Call:
+## plm(formula = rightwingplots ~ state + I(whitealone/totalpop) + 
+##     I((whitealone/totalpop)^2) + unemployment24, data = usrightplotsexpanded, 
+##     effect = "individual", model = "within", index = c("state", 
+##         "year"))
+## 
+## Balanced Panel: n = 42, T = 28, N = 1176
+## 
+## Residuals:
+##     Min.  1st Qu.   Median  3rd Qu.     Max. 
+## -3.00375 -0.60489 -0.21886  0.26089 12.09403 
+## 
+## Coefficients:
+##                              Estimate Std. Error t-value  Pr(&gt;|t|)    
+## I(whitealone/totalpop)      14.492719   7.284949  1.9894 0.0468970 *  
+## I((whitealone/totalpop)^2) -16.414895   4.753526 -3.4532 0.0005745 ***
+## unemployment24              -0.101930   0.025997 -3.9208 9.356e-05 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Total Sum of Squares:    2105.4
+## Residual Sum of Squares: 1995.2
+## R-Squared:      0.052315
+## Adj. R-Squared: 0.015447
+## F-statistic: 20.8117 on 3 and 1131 DF, p-value: 3.9669e-13
+```
+
+
+---
+### Fixed Effects
+
+-   No serial autocorrelation
+
+-   No spatial autocorrelation
+
+---
+
+```r
+pbgtest(rightplotslmfe2, order=5)
+```
+
+```
+## 
+## 	Breusch-Godfrey/Wooldridge test for serial correlation in panel models
+## 
+## data:  rightwingplots ~ state + I(whitealone/totalpop) + I((whitealone/totalpop)^2) +  ...
+## chisq = 33.966, df = 5, p-value = 2.419e-06
+## alternative hypothesis: serial correlation in idiosyncratic errors
+```
+
+---
+
+```r
+usplotspdata &lt;- pdata.frame(usrightplotsexpanded, index=c("state", "year"))
+
+rightplotslmlag &lt;- plm(rightwingplots ~ state + I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) + 
+                            lag(usplotspdata$rightwingplots) +
+                            unemployment24,
+                          effect = "individual",
+                          model = "within",
+                          data=usplotspdata)
+```
+
+---
+
+```r
+summary(rightplotslmlag)
+```
+
+```
+## Oneway (individual) effect Within Model
+## 
+## Call:
+## plm(formula = rightwingplots ~ state + I(whitealone/totalpop) + 
+##     I((whitealone/totalpop)^2) + lag(usplotspdata$rightwingplots) + 
+##     unemployment24, data = usplotspdata, effect = "individual", 
+##     model = "within")
+## 
+## Balanced Panel: n = 42, T = 28, N = 1176
+## 
+## Residuals:
+##     Min.  1st Qu.   Median  3rd Qu.     Max. 
+## -3.47800 -0.58021 -0.19518  0.22829 11.14902 
+## 
+## Coefficients:
+##                                    Estimate Std. Error t-value  Pr(&gt;|t|)    
+## I(whitealone/totalpop)            12.757762   7.187170  1.7751 0.0761547 .  
+## I((whitealone/totalpop)^2)       -14.279562   4.699998 -3.0382 0.0024346 ** 
+## lag(usplotspdata$rightwingplots)   0.188094   0.032268  5.8292 7.261e-09 ***
+## unemployment24                    -0.090601   0.025700 -3.5253 0.0004399 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Total Sum of Squares:    2105.4
+## Residual Sum of Squares: 1937
+## R-Squared:      0.079981
+## Adj. R-Squared: 0.043343
+## F-statistic: 24.5587 on 4 and 1130 DF, p-value: &lt; 2.22e-16
+```
+
+---
+
+```r
+pbgtest(rightplotslmlag, order=5)
+```
+
+```
+## 
+## 	Breusch-Godfrey/Wooldridge test for serial correlation in panel models
+## 
+## data:  rightwingplots ~ state + I(whitealone/totalpop) + I((whitealone/totalpop)^2) +  ...
+## chisq = 9.9399, df = 5, p-value = 0.07696
+## alternative hypothesis: serial correlation in idiosyncratic errors
+```
+
+---
+
+```r
+usplotspdata &lt;- pdata.frame(usrightplotsexpanded, index=c("state", "year"))
+
+rightplotslmlag2 &lt;- plm(rightwingplots ~ state + I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) + 
+                            lag(usplotspdata$rightwingplots) +
+                            lag(usplotspdata$rightwingplots, k = 2L) +
+                            unemployment24,
+                          effect = "individual",
+                          model = "within",
+                          data=usplotspdata)
+```
+
+---
+
+```r
+summary(rightplotslmlag2)
+```
+
+```
+## Oneway (individual) effect Within Model
+## 
+## Call:
+## plm(formula = rightwingplots ~ state + I(whitealone/totalpop) + 
+##     I((whitealone/totalpop)^2) + lag(usplotspdata$rightwingplots) + 
+##     lag(usplotspdata$rightwingplots, k = 2L) + unemployment24, 
+##     data = usplotspdata, effect = "individual", model = "within")
+## 
+## Balanced Panel: n = 42, T = 28, N = 1176
+## 
+## Residuals:
+##     Min.  1st Qu.   Median  3rd Qu.     Max. 
+## -3.90127 -0.58024 -0.19448  0.22590 11.19951 
+## 
+## Coefficients:
+##                                           Estimate Std. Error t-value  Pr(&gt;|t|)
+## I(whitealone/totalpop)                   12.342229   7.177038  1.7197 0.0857642
+## I((whitealone/totalpop)^2)              -13.676487   4.699595 -2.9101 0.0036835
+## lag(usplotspdata$rightwingplots)          0.177949   0.032532  5.4700 5.539e-08
+## lag(usplotspdata$rightwingplots, k = 2)   0.074230   0.033333  2.2269 0.0261480
+## unemployment24                           -0.087167   0.025701 -3.3915 0.0007191
+##                                            
+## I(whitealone/totalpop)                  .  
+## I((whitealone/totalpop)^2)              ** 
+## lag(usplotspdata$rightwingplots)        ***
+## lag(usplotspdata$rightwingplots, k = 2) *  
+## unemployment24                          ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Total Sum of Squares:    2105.4
+## Residual Sum of Squares: 1928.5
+## R-Squared:      0.084004
+## Adj. R-Squared: 0.046683
+## F-statistic: 20.7077 on 5 and 1129 DF, p-value: &lt; 2.22e-16
+```
+
+---
+
+```r
+pbgtest(rightplotslmlag2, order=5)
+```
+
+```
+## 
+## 	Breusch-Godfrey/Wooldridge test for serial correlation in panel models
+## 
+## data:  rightwingplots ~ state + I(whitealone/totalpop) + I((whitealone/totalpop)^2) +  ...
+## chisq = 8.0505, df = 5, p-value = 0.1535
+## alternative hypothesis: serial correlation in idiosyncratic errors
+```
+
+---
+### Two-Way Fixed Effects
+
+`$$Y_{i,t} = \alpha_{i} + \lambda_{t} + \beta \mathbf{X}_{i,t} + \epsilon_{i,t}$$`
+
+
+---
+
+```r
+rightplotslmfe3 &lt;- plm(rightwingplots ~ state + I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24,
+                          effect = "twoways",
+                          model = "within",
+                          data=usrightplotsexpanded,
+                          index=c("state","year"))
+```
+
+---
+
+```r
+summary(rightplotslmfe3)
+```
+
+```
+## Twoways effects Within Model
+## 
+## Call:
+## plm(formula = rightwingplots ~ state + I(whitealone/totalpop) + 
+##     I((whitealone/totalpop)^2) + unemployment24, data = usrightplotsexpanded, 
+##     effect = "twoways", model = "within", index = c("state", 
+##         "year"))
+## 
+## Balanced Panel: n = 42, T = 28, N = 1176
+## 
+## Residuals:
+##     Min.  1st Qu.   Median  3rd Qu.     Max. 
+## -3.09003 -0.53709 -0.12586  0.23282 11.67694 
+## 
+## Coefficients:
+##                             Estimate Std. Error t-value Pr(&gt;|t|)
+## I(whitealone/totalpop)      6.524156   7.663854  0.8513   0.3948
+## I((whitealone/totalpop)^2) -5.672483   6.073870 -0.9339   0.3506
+## unemployment24             -0.017120   0.050348 -0.3400   0.7339
+## 
+## Total Sum of Squares:    1818.1
+## Residual Sum of Squares: 1816.6
+## R-Squared:      0.00087772
+## Adj. R-Squared: -0.063377
+## F-statistic: 0.323283 on 3 and 1104 DF, p-value: 0.80854
+```
+
+---
+
+```r
+pFtest(rightplotslmfe3, rightplotslmfe2)
+```
+
+```
+## 
+## 	F test for twoways effects
+## 
+## data:  rightwingplots ~ state + I(whitealone/totalpop) + I((whitealone/totalpop)^2) +  ...
+## F = 4.0216, df1 = 27, df2 = 1104, p-value = 4.25e-11
+## alternative hypothesis: significant effects
+```
+
+---
+### Poolability
+
+`$$Y_{i,t} = \alpha_{i} + \lambda_{t} + \beta_{i} \mathbf{X}_{i,t} + \epsilon_{i,t}$$`
+
+
+---
+
+```r
+rightplotspvcm &lt;- pvcm(rightwingplots ~ I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24,
+                          effect = "individual",
+                          model = "within",
+                          data=usrightplotsexpanded,
+                          index=c("state","year"))
+
+pooltest(rightplotslmfe2, rightplotspvcm)
+```
+
+```
+## 
+## 	F statistic
+## 
+## data:  rightwingplots ~ state + I(whitealone/totalpop) + I((whitealone/totalpop)^2) +  ...
+## F = 3.1768, df1 = 123, df2 = 1008, p-value &lt; 2.2e-16
+## alternative hypothesis: unstability
+```
+
+
+
+
+
+---
+### Other Issues
+
+-   Contemporaneous correlations
+
+-   Heteroskedasticity
+
+-   Unit-specific dynamics
+
+
+
+---
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![](5Panels_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+
+---
+`$$Y_{i,t} = \alpha_{i} + \beta \mathbf{X}_{i,t} + \epsilon_{i,t}$$`
+
+
+---
+`$$Y_{i,t} = a + \beta \mathbf{X}_{i,t} + \epsilon_{i,t}$$`
+
+`$$\epsilon_{i,t} = \alpha_{i} + \nu_{i,t}$$`
+
+---
+
+```r
+library(plm)
+
+rightplotslmre &lt;- plm(rightwingplots ~ I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24,
+                          effect = "individual",
+                          model = "random",
+                          data=usrightplotsexpanded,
+                          index=c("state","year"))
+```
+
+---
+
+```r
+summary(rightplotslmre)
+```
+
+```
+## Oneway (individual) effect Random Effect Model 
+##    (Swamy-Arora's transformation)
+## 
+## Call:
+## plm(formula = rightwingplots ~ I(whitealone/totalpop) + I((whitealone/totalpop)^2) + 
+##     unemployment24, data = usrightplotsexpanded, effect = "individual", 
+##     model = "random", index = c("state", "year"))
+## 
+## Balanced Panel: n = 42, T = 28, N = 1176
+## 
+## Effects:
+##                  var std.dev share
+## idiosyncratic 1.7641  1.3282 0.902
+## individual    0.1914  0.4375 0.098
+## theta: 0.5023
+## 
+## Residuals:
+##     Min.  1st Qu.   Median  3rd Qu.     Max. 
+## -1.82778 -0.65251 -0.32474  0.15027 12.36219 
+## 
+## Coefficients:
+##                             Estimate Std. Error z-value  Pr(&gt;|z|)    
+## (Intercept)                -2.134630   1.012078 -2.1092 0.0349311 *  
+## I(whitealone/totalpop)     12.105375   2.936676  4.1221 3.754e-05 ***
+## I((whitealone/totalpop)^2) -9.804575   2.116014 -4.6335 3.595e-06 ***
+## unemployment24             -0.087133   0.025404 -3.4299 0.0006038 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Total Sum of Squares:    2184.5
+## Residual Sum of Squares: 2123.1
+## R-Squared:      0.028099
+## Adj. R-Squared: 0.025611
+## Chisq: 33.8843 on 3 DF, p-value: 2.0958e-07
+```
+
+---
+
+```r
+phtest(rightplotslmre, rightplotslmfe2)
+```
+
+```
+## 
+## 	Hausman Test
+## 
+## data:  rightwingplots ~ I(whitealone/totalpop) + I((whitealone/totalpop)^2) +  ...
+## chisq = 38.519, df = 3, p-value = 2.195e-08
+## alternative hypothesis: one model is inconsistent
+```
+
+---
+
+```r
+rightplotslme1 &lt;- lme(rightwingplots ~ I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24, data=usrightplotsexpanded, 
+                            random = ~1|state,
+                      na.action = na.omit)
+```
+
+---
+
+```r
+summary(rightplotslme1)
+```
+
+```
+## Linear mixed-effects model fit by REML
+##   Data: usrightplotsexpanded 
+##       AIC      BIC    logLik
+##   4106.53 4136.929 -2047.265
+## 
+## Random effects:
+##  Formula: ~1 | state
+##         (Intercept) Residual
+## StdDev:   0.5199505 1.339555
+## 
+## Fixed effects:  rightwingplots ~ I(whitealone/totalpop) + I((whitealone/totalpop)^2) +      unemployment24 
+##                                 Value Std.Error   DF   t-value p-value
+## (Intercept)                 -2.278924  1.119887 1131 -2.034960  0.0421
+## I(whitealone/totalpop)      12.958623  3.229064 1131  4.013121  0.0001
+## I((whitealone/totalpop)^2) -10.592600  2.318133 1131 -4.569453  0.0000
+## unemployment24              -0.090589  0.025481 1131 -3.555080  0.0004
+##  Correlation: 
+##                            (Intr) I(wh/) I((/)^
+## I(whitealone/totalpop)     -0.953              
+## I((whitealone/totalpop)^2)  0.888 -0.983       
+## unemployment24             -0.076 -0.086  0.110
+## 
+## Standardized Within-Group Residuals:
+##         Min          Q1         Med          Q3         Max 
+## -1.80037070 -0.43099968 -0.19903215  0.09506778  9.02409519 
+## 
+## Number of Observations: 1176
+## Number of Groups: 42
+```
+
+---
+
+```r
+rightplotslme2 &lt;- lme(rightwingplots ~ I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24, data=usrightplotsexpanded, 
+                            random = ~1 + unemployment24 |state,
+                      na.action = na.omit)
+```
+
+---
+
+```r
+summary(rightplotslme2)
+```
+
+```
+## Linear mixed-effects model fit by REML
+##   Data: usrightplotsexpanded 
+##        AIC    BIC    logLik
+##   4104.069 4144.6 -2044.034
+## 
+## Random effects:
+##  Formula: ~1 + unemployment24 | state
+##  Structure: General positive-definite, Log-Cholesky parametrization
+##                StdDev     Corr  
+## (Intercept)    0.99906169 (Intr)
+## unemployment24 0.08678295 -0.978
+## Residual       1.33224938       
+## 
+## Fixed effects:  rightwingplots ~ I(whitealone/totalpop) + I((whitealone/totalpop)^2) +      unemployment24 
+##                                Value Std.Error   DF   t-value p-value
+## (Intercept)                -1.999156  1.105437 1131 -1.808475  0.0708
+## I(whitealone/totalpop)     11.966164  3.194948 1131  3.745339  0.0002
+## I((whitealone/totalpop)^2) -9.838886  2.303403 1131 -4.271457  0.0000
+## unemployment24             -0.086479  0.028480 1131 -3.036450  0.0024
+##  Correlation: 
+##                            (Intr) I(wh/) I((/)^
+## I(whitealone/totalpop)     -0.947              
+## I((whitealone/totalpop)^2)  0.886 -0.984       
+## unemployment24             -0.117 -0.097  0.120
+## 
+## Standardized Within-Group Residuals:
+##        Min         Q1        Med         Q3        Max 
+## -2.0014629 -0.4307023 -0.2171703  0.1124501  9.1371559 
+## 
+## Number of Observations: 1176
+## Number of Groups: 42
+```
+
+---
+
+```r
+anova(rightplotslme1, rightplotslme2)
+```
+
+```
+##                Model df      AIC      BIC    logLik   Test  L.Ratio p-value
+## rightplotslme1     1  6 4106.530 4136.929 -2047.265                        
+## rightplotslme2     2  8 4104.069 4144.600 -2044.034 1 vs 2 6.461528  0.0395
+```
+
+
+---
+![image](socpanels1.jpg)
+
+
+---
+![image](socpanels2.jpg)
+
+
+---
+![image](reefficient.jpg)
+
+
+---
+1.  RE is more efficient only if errors are homoskedastic and serially
+    uncorrelated.
+
+2.  Throwing away between variation can be an advantage because it
+    eliminates some kinds of confounding.
+
+3.  If the RE model is wrong, then it also may not be efficient.
+
+
+---
+1.  Unit heterogeneity
+
+2.  "Sluggish" right-hand-side variables
+
+3.  If the RE model is wrong, then it also may not be efficient.
+
+4.  Time dynamics
+
+
+---
+![image](polscipanels.jpg)
+
+
+---
+![image](unitfeadded.jpg)
+
+
+---
+![image](fepicture.jpg)
+
+
+---
+![image](fepicture2.jpg)
+
+
+---
+![image](tscsconclusion.jpg)
+
+
+---
+![image](Hung1.jpg)
+
+
+---
+![image](Hung2.jpg)
+
+
+---
+![image](oilpanels.jpg)
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create();
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
