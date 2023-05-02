@@ -8,7 +8,7 @@ Week four: <a href="https://jnseawright.github.io/Spring-2023/4-Integrated/4-Int
 
 Week five: <a href="https://jnseawright.github.io/Spring-2023/5-Panel/5Panels.html#1">Introduction to Panels</a> slides.
 
-Week six: <a href="https://jnseawright.github.io/Spring-2023/6-Multilevel/6Multilevel.html#1">Multilevel Models in Panels</a> slides.
+Week six: <a href="https://jnseawright.github.io/Spring-2023/6-Multilevel/6BayesMultilevel.html#1">Multilevel Models in Panels</a> slides.
 
 <a href="https://jnseawright.github.io/Spring-2023/Labs/Lab 1.pdf">Lab 1</a> .
 
