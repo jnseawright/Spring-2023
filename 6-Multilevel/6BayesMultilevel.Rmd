@@ -1,0 +1,309 @@
+---
+title: "6: Bayesian and Multi-Level Models in Panel Contexts"
+subtitle: "Time Series and Panels"
+author: "<large>J. Seawright</large>"
+institute: "<small>Northwestern Political Science</small>" 
+date: "May 4, 2023"
+output: 
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+     
+
+---
+class: center, middle
+
+```{r, load_refs, include=FALSE, cache=FALSE}
+# Initializes the bibliography
+library(RefManageR)
+
+library(ggplot2)
+library(dplyr)
+library(nlme)
+
+BibOptions(check.entries = FALSE,
+           bib.style = "authoryear", # Bibliography style
+           max.names = 3, # Max author names displayed in bibliography
+           sorting = "nyt", #Name, year, title sorting
+           cite.style = "authoryear", # citation style
+           style = "markdown",
+           hyperlink = FALSE,
+           dashed = FALSE)
+#myBib <- ReadBib("assets/myBib.bib", check = FALSE)
+# Note: don't forget to clear the knitr cache to account for changes in the
+# bibliography.
+library(DT)
+
+usrightplotsexpanded <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/usrightplotsexpanded.csv")
+
+usrightplotsexpanded2 <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/usrightplotsexpanded2.csv")
+
+qog_std_ts_jan23 <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/qog_std_ts_jan23.csv")
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+style_mono_accent(
+  base_color = "#1c5253",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono"),
+  text_font_size = "1.6rem"
+)
+```
+---
+ 
+
+---
+###Shared Intuition of Bayesian and Multilevel Models
+
+* If each of our units has a time series model with its own parameters, that means there is a distribution of parameters across the units.
+
+---
+
+$$y_{1,t} = \alpha_{1} + \beta_{1,0} (y_{1,t-1}) + \beta_{1,1} (x_{1,t}) + \cdots + \epsilon_{1,t}$$
+
+---
+###Shared Intuition of Bayesian and Multilevel Models
+
+The random-effects model that is widely used in panels assigns $\alpha_{i}$ the normal distribution.
+
+$$y_{i,t} = \alpha_{i} + \gamma y_{i,t-1} + \mathbb{\beta} \mathbb{X}_{i} + \epsilon_{i,t}$$
+$$\alpha \sim N(0,\sigma^2_{\mu})$$
+
+---
+
+We can rewrite this as two stacked regression models:
+
+$$y_{i,t} = \alpha_{i} + \gamma y_{i,t-1} + \mathbb{\beta} \mathbb{X}_{i} + \epsilon_{i,t}$$
+
+$$\alpha_{i} = \mu + \eta_{i}$$
+
+---
+
+$$y_{i,t} = \alpha_{i} + \gamma y_{i,t-1} + \mathbb{\beta} \mathbb{X}_{i} + \epsilon_{i,t}$$
+
+$$\alpha_{i} = \mu + \mathbb{\delta}\mathbb{W_{i}} + \eta_{i}$$
+
+---
+
+$$y_{i,t} = \alpha_{i} + \gamma y_{i,t-1} + \mathbb{\beta_{i}} \mathbb{X}_{i} + \epsilon_{i,t}$$
+
+$$\alpha_{i} = \mu + \mathbb{\delta}\mathbb{W_{i}} + \eta_{i}$$
+$$\mathbb{\beta}_{i} = \upsilon + \mathbb{\lambda}\mathbb{V_{i}} + \tau_{i}$$
+
+---
+### Bayesian Models
+
+While multilevel models specify the distribution and try to estimate the rest from data, Bayesian models add a prior distribution that provides information about beliefs regarding the parameters of interest. This can be good --- or messy.
+
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+library(lme4)
+
+rightplotslme2 <- lmer(rightwingplots ~ I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24 + (1 + unemployment24 | state), 
+                            data=usrightplotsexpanded, 
+                            REML = FALSE)
+
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+summary(rightplotslme2)
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+
+summary(lm(unemployment24~state, data=usrightplotsexpanded))
+
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+rightplotslme3 <- lmer(rightwingplots ~ I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24 + demvoteshare +
+                            (1 + demvoteshare | state), 
+                            data=usrightplotsexpanded2, 
+                            REML = FALSE)
+
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+summary(rightplotslme3)
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+democlme <- lmer(p_polity2 ~ I(log(wdi_gdpcapcon2015)) +
+                            wdi_oilrent+ (1 + I(log(wdi_gdpcapcon2015)) | cname), 
+                            data=qog_std_ts_jan23, 
+                            REML = FALSE)
+
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+summary(democlme)
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+democlme2 <- lmer(p_polity2 ~ I(log(wdi_gdpcapcon2015)) +
+                            wdi_oilrent+ (1 + wdi_oilrent | cname), 
+                            data=qog_std_ts_jan23, 
+                            REML = FALSE)
+
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+summary(democlme2)
+```
+
+
+
+---
+### Tests for Cross-Sectional Correlation
+
+Breusch and Pagan LM test
+ 
+$$LM = T \sum_{i=1}^{N-1} \sum_{j=i+1}^{N} \hat{\rho}^2_{i,j}$$
+
+This statistic asymptotically follows the $\chi^2$ distribution when there is no cross-sectional correlation.
+
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+library(plm)
+
+pcdtest(rightwingplots ~ I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24,
+                          effect = "individual",
+                          model = "within",
+                          data=usrightplotsexpanded,
+                          index=c("state","year"),
+        test="lm")
+```
+
+---
+### Tests for Cross-Sectional Correlation
+
+* The Breusch-Pagan test can have poor properties when N is bigger than T.
+
+* Pesaran has a more general alternative:
+ 
+$$CD = \sqrt{\frac{2T}{N(N-1)}} \left(\sum_{i=1}^{N-1}\sum_{j=i+1}^{N}\hat{\rho_{i,j}}\right)$$
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+pcdtest(rightwingplots ~ I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24,
+                          effect = "individual",
+                          model = "within",
+                          data=usrightplotsexpanded,
+                          index=c("state","year"),
+        test="cd")
+```
+
+---
+### PCSEs
+
+Suppose that we are concerned about:
+
+* Contemporaneous cross-sectional correlations among units
+
+* Heteroskedasticity at the unit variance level
+
+---
+### PCSEs
+
+Then we can run an improved OLS panel regression model using the following to estimate standard errors:
+
+$$Cov(\hat{\beta})=((\mathbb{X}^{T}\mathbb{X})^{-1} (\mathbb{X}^{T}\mathbb{\Omega}\mathbb{X}) (\mathbb{X}^{T}\mathbb{X})^{-1})$$
+
+Here, $\mathbb{\Omega}$ is  an NT x NT block diagonal matrix with an N x N matrix of contemporaneous covariances, $\mathbb{\Sigma}$, along the diagonal.
+
+$$\mathbb{\hat{\Sigma}}_{i,j}=\frac{\sum_{t=1}^{T} e_{i,t} e_{j,t}}{T}$$
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+rightplotsplm <- plm(rightwingplots ~ I(whitealone/totalpop) +
+                            I((whitealone/totalpop)^2) +
+                            unemployment24,
+                          effect = "individual",
+                          model = "within",
+                          data=usrightplotsexpanded,
+                          index=c("state","year"))
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+library(lmtest)
+rightwingplots_pcse <- coeftest(rightplotsplm, 
+                                 vcov = vcovBK(rightplotsplm, 
+                                               type="HC3", 
+                                               cluster = "group"))
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+rightwingplots_pcse 
+
+summary(rightplotsplm)
+
+```
+
+---
+### PCSEs
+
+* PCSEs want the time dimension to be substantially larger than the unit dimension. If the reverse is true, they are unreliable.
+
+* They are also unreliable if there is autocorrelation in the errors.
+
+---
+### Serial and Cross-Sectional Correlation
+
+* Driscoll and Kraay (1998) propose a GMM approach that addresses the same challenges as PCSEs but doesn't have those limitations.
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+rightwingplots_scc <- coeftest(rightplotsplm, 
+                                 vcov = vcovSCC(rightplotsplm, 
+                                               type="HC3", 
+                                               cluster = "group"))
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+rightwingplots_pcse 
+
+rightwingplots_scc
+
+```
+
+
+---
+### PVCM
+
+$$Y_{i,t} = \alpha_{i} + \beta_{i} \mathbf{X}_{i,t} + \epsilon_{i,t}$$
+ 
+
+---
+### PVCM+
+
+$$Y_{i,t} = \alpha_{i} + \beta_{i} \mathbf{X}_{i,t} + \epsilon_{i,t}$$
+
+$$\alpha_{i} = a + \gamma \mathbf{W}_{i} + \delta_{i}$$
+
+$$\beta_{i} = b + \pi \mathbf{V}_{i} + \nu_{i}$$
+ 
+
+ 
+
+ 
