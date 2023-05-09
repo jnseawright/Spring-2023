@@ -10,6 +10,8 @@ Week five: <a href="https://jnseawright.github.io/Spring-2023/5-Panel/5Panels.ht
 
 Week six: <a href="https://jnseawright.github.io/Spring-2023/6-Multilevel/6BayesMultilevel.html#1">Multilevel Models in Panels</a> slides.
 
+Week seven: <a href="https://jnseawright.github.io/Spring-2023/7-Stochastic/7Stochastic.html#1">Stochastic IVs in Panels</a> slides.
+
 <a href="https://jnseawright.github.io/Spring-2023/Labs/Lab 1.pdf">Lab 1</a> .
 
 <a href="https://jnseawright.github.io/Spring-2023/Labs/Lab 2.pdf">Lab 2</a> .
