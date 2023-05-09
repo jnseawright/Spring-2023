@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>7: Stochatic Regressors in Panels and Panel VAR</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="J. Seawright" />
+    <meta name="date" content="2023-05-11" />
+    <script src="7Stochastic_files/header-attrs-2.21/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# 7: Stochatic Regressors in Panels and Panel VAR
+]
+.subtitle[
+## Time Series and Panels
+]
+.author[
+### <large>J. Seawright</large>
+]
+.institute[
+### <small>Northwestern Political Science</small>
+]
+.date[
+### May 11, 2023
+]
+
+---
+
+class: center, middle
+
+
+
+
+---
+
+---
+Stochastic vs. deterministic regressors
+
+
+---
+Exogenous vs. endogenous regressors
+
+
+---
+### Strict Exogeneity
+
+`$$E(\epsilon_{i, s} | \mathbf{X}_{i,t}) = 0$$`, for any `\(s\)`, `\(t\)`.
+
+
+---
+### Predetermined
+
+`$$E(\epsilon_{i, s} | \mathbf{X}_{i, t}) = 0$$`, for `\(s &gt; t\)`
+
+
+---
+### Martingale Difference
+
+`$$E(\epsilon_{i} | \epsilon_{i-1}, \ldots, \epsilon_{1}, \mathbf{X}_{i}, \ldots, \mathbf{X}_{1}) = 0$$`
+
+
+---
+### Weak vs. Strong Exogeneity
+
+
+---
+### Sequentially Exogenous
+
+`\(\mathbf{X}\)` is *sequentially exogenous* conditional on the unobserved
+effects if:
+
+`$$E(\epsilon_{i,t} | \alpha_{i}, \mathbf{X}_{i,t},\ldots,\mathbf{X}_{i,1}) = 0$$`
+
+
+---
+`$$y_{i,t} = \alpha_{i} + \gamma y_{i, t-1} + \mathbf{\beta} \mathbf{X}_{i,t} + \epsilon_{i,t}$$`
+
+
+---
+Seemingly Unrelated Regressions
+
+
+---
+`$$\mathbf{Y} = \mathbf{X} \mathbf{\beta} + \mathbf{\epsilon}$$`
+
+
+---
+`$$Var(\mathbf{Y}) = Var(\mathbf{\epsilon}) = \begin{bmatrix}
+    \sigma^{2}_{1} \mathbf{I}_{n} &amp; \sigma_{12} \mathbf{I}_{n} \\
+    \sigma_{12} \mathbf{I}_{n} &amp; \sigma^{2}_{2} \mathbf{I}_{n} \\
+\end{bmatrix}$$`
+
+
+---
+`$$\mathbf{b}_{GLS} = (\mathbf{X}^{T}(Var \mathbf{Y})^{-1} \mathbf{X})^{-1} \mathbf{X}^{T}(Var \mathbf{Y})^{-1} \mathbf{Y}$$`
+
+
+---
+2SLS in Panels
+
+
+
+---
+Latent Variables Models
+
+* 2SLS plus measurement error models
+
+
+---
+Latent Variables Models
+
+`$$x_{i, t} = \tau_{x} + \Lambda_{x} \xi_{i, t} + \delta_{i, t}$$`
+
+`$$y_{i, t} = \tau_{y} + \Lambda_{y} \eta_{i, t} + \epsilon_{i, t}$$`
+
+`$$\eta_{i, t} = \tau_{n} + \mathbb{B} \eta_{i, t-k} + \Gamma \xi_{i, t} + \zeta_{i, t}$$`
+
+---
+
+
+```r
+library(lavaan)
+```
+
+```
+## This is lavaan 0.6-15
+## lavaan is FREE software! Please report any bugs.
+```
+
+
+---
+
+
+```r
+model&lt;-' 
+#latentvariabledefinitions 
+ind60=~x1+x2+x3 
+dem60=~y1+a*y2+b*y3+c*y4 
+dem65=~y5+a*y6+b*y7+c*y8 
+
+#regressions 
+
+dem60~ind60 
+dem65~ind60+dem60 
+
+#residualcorrelations 
+y1~~y5 
+y2~~y4+y6 
+y3~~y7 
+y4~~y8 
+y6~~y8 
+' 
+fit.sam&lt;-sam(model,data=PoliticalDemocracy,
+             mm.list=list(ind="ind60",dem=c("dem60","dem65"))) 
+```
+
+---
+
+
+```r
+summary(fit.sam)
+```
+
+```
+## This is lavaan 0.6.15 -- using the SAM approach to SEM
+## 
+##   SAM method                                     LOCAL
+##   Mapping matrix M method                           ML
+##   Number of measurement blocks                       2
+##   Estimator measurement part                        ML
+##   Estimator  structural part                        ML
+## 
+##   Number of observations                            75
+## 
+## Summary Information Measurement + Structural:
+## 
+##   Block      Latent Nind Chisq Df
+##       1       ind60    3  0.00  0
+##       2 dem60,dem65    8 15.32 16
+## 
+##   Model-based reliability latent variables:
+## 
+##   ind60 dem60 dem65
+##   0.966 0.868  0.87
+## 
+##   Summary Information Structural part:
+## 
+##   chisq df cfi rmsea srmr
+##       0  0   1     0    0
+## 
+## Parameter Estimates:
+## 
+##   Standard errors                              Twostep
+##   Information                                 Expected
+##   Information saturated (h1) model          Structured
+## 
+## Regressions:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)
+##   dem60 ~                                             
+##     ind60             1.454    0.389    3.741    0.000
+##   dem65 ~                                             
+##     ind60             0.558    0.225    2.480    0.013
+##     dem60             0.871    0.076   11.497    0.000
+## 
+## Variances:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)
+##     ind60             0.446    0.087    5.135    0.000
+##    .dem60             3.766    0.848    4.439    0.000
+##    .dem65             0.189    0.224    0.843    0.399
+```
+
+---
+Panel Vector Autoregression
+
+
+---
+`$$\mathbf{y}_{i,t} = \alpha_{i} + \sum_{l=1}^{p} \mathbf{A} \mathbf{y}_{i,t} + \mathbf{B} \mathbf{x}_{i,t} + \mathbf{C} \mathbf{s}_{i,t} + \epsilon_{i,t}$$`
+
+
+---
+Generalized Method of Moments
+
+
+---
+Each additional time period adds another potential instrument, and
+therefore increases the total number of conditions which can be used in
+GMM.
+
+
+---
+GMM requires `\(T\)` to be sort of smaller than `\(N\)`. Strictly speaking, meet
+one of two conditions:
+
+1.  As both parameters go to infinity, `\(\frac{log(T)^2}{N}\)` has to go to
+    zero.
+
+2.  Limit the number of instruments to `\(q\)`. Then `\(\frac{q^3}{N}\)` has to
+    go to zero.
+
+
+---
+
+```r
+library(panelvar)
+```
+
+```
+## Welcome to panelvar! Please cite our package in your publications -- see citation("panelvar")
+```
+
+```r
+qog &lt;- as.data.frame(qog_std_ts_jan23)
+
+qog$loggdp &lt;- log(qog$wdi_gdpcappppcon2017)
+
+ex1_demdevconflict &lt;- pvargmm(dependent_vars = c("p_polity2", "loggdp", "wdi_brdeath"),
+                             lags = 3,
+                             transformation = "fod",
+                             data = qog,
+                             panel_identifier=c("ccode", "year"),
+                             steps = c("twostep"),
+                             system_instruments = FALSE,
+                             max_instr_dependent_vars = 99,
+                             max_instr_predet_vars = 99,
+                             collapse = TRUE)
+```
+
+```
+## Warning in pvargmm(dependent_vars = c("p_polity2", "loggdp", "wdi_brdeath"), :
+## The matrix Lambda is singular, therefore the general inverse is used
+```
+
+```
+## Warning in pvargmm(dependent_vars = c("p_polity2", "loggdp", "wdi_brdeath"), :
+## The matrix D_e is singular, therefore the general inverse is used
+```
+
+---
+
+```r
+ex1_demdevconflict 
+```
+
+&lt;table class="texreg" style="margin: 10px auto;border-collapse: collapse;border-spacing: 0px;caption-side: bottom;color: #000000;border-top: 2px solid #000000;"&gt;
+&lt;caption&gt;Statistical models&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;p_polity2&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;loggdp&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;wdi_brdeath&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr style="border-top: 1px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;lag1_p_polity2&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.0057&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0003&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0015&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0703)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0021)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0116)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;lag1_loggdp&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.0036&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0003&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.0025&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0446)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0033)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0306)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;lag1_wdi_brdeath&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.1080&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.4422&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.1522&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.3881)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(4.3015)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.1315)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;lag2_p_polity2&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.0069&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0004&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0008&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0847)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0038)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0036)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;lag2_loggdp&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.0039&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0003&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.0026&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0477)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0036)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0323)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;lag2_wdi_brdeath&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.0999&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.3239&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0399&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.3007)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(4.5114)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0532)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;lag3_p_polity2&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.0083&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0007&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0018&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.1022)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0067)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0127)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;lag3_loggdp&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.0040&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0004&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.0023&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0491)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0037)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0279)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;lag3_wdi_brdeath&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0263&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.0936&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.0094&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="border-bottom: 2px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.1045)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(2.1494)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.0495)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tfoot&gt;
+&lt;tr&gt;
+&lt;td style="font-size: 0.8em;" colspan="4"&gt;&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;p &amp;lt; 0.001; &lt;sup&gt;&amp;#42;&amp;#42;&lt;/sup&gt;p &amp;lt; 0.01; &lt;sup&gt;&amp;#42;&lt;/sup&gt;p &amp;lt; 0.05&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tfoot&gt;
+&lt;/table&gt;
+
+---
+
+```r
+ex2_demdevconflict &lt;- pvargmm(dependent_vars = c("p_polity2", "loggdp", "wdi_brdeath"),
+                             predet_vars = c("wdi_gerp"),
+                             lags = 3,
+                             transformation = "fod",
+                             data = qog,
+                             panel_identifier=c("ccode", "year"),
+                             steps = c("twostep"),
+                             system_instruments = FALSE,
+                             max_instr_dependent_vars = 99,
+                             max_instr_predet_vars = 99,
+                             collapse = TRUE)
+```
+
+```
+## Warning in pvargmm(dependent_vars = c("p_polity2", "loggdp", "wdi_brdeath"), :
+## The matrix Lambda is singular, therefore the general inverse is used
+```
+
+```
+## Warning in pvargmm(dependent_vars = c("p_polity2", "loggdp", "wdi_brdeath"), :
+## The matrix D_e is singular, therefore the general inverse is used
+```
+
+---
+
+```r
+girf(ex2_demdevconflict, n.ahead=4, ma_approx_steps = 4)
+```
+
+```
+## $p_polity2
+##       p_polity2      loggdp wdi_brdeath
+## [1,] 35.9538560 425.3121046 14.71396875
+## [2,]  0.5170396  -2.8522355  1.68178741
+## [3,]  0.8020865   2.2433224  0.04762692
+## [4,]  0.8281792  -0.4215217  0.76193405
+## 
+## $loggdp
+##       p_polity2     loggdp wdi_brdeath
+## [1,] 27.6941201 552.160895  38.4354427
+## [2,]  0.4452786  -7.760218   3.8647589
+## [3,]  1.1218023   5.658021  -0.4825707
+## [4,]  1.1527540  -1.363870   1.5346222
+## 
+## $wdi_brdeath
+##        p_polity2     loggdp wdi_brdeath
+## [1,]   0.5520943   22.14805   958.21288
+## [2,] -10.8812572 -200.67365    82.93497
+## [3,]   4.7301987  136.53041   -26.70103
+## [4,]   4.9479762  -40.27007    25.41049
+## 
+## attr(,"class")
+## [1] "pvargirf"
+```
+
+---
+
+```r
+plot(girf(ex2_demdevconflict, n.ahead=4, ma_approx_steps = 4))
+```
+
+&lt;img src="7Stochastic_files/figure-html/unnamed-chunk-8-1.png" height="100%" /&gt;
+
+---
+
+```r
+girf(ex2_demdevconflict, n.ahead=10, ma_approx_steps = 10)
+```
+
+```
+## $p_polity2
+##           p_polity2        loggdp   wdi_brdeath
+##  [1,]  3.595386e+01  4.253121e+02 14.7139687518
+##  [2,]  5.170396e-01 -2.852235e+00  1.6817874086
+##  [3,]  8.020865e-01  2.243322e+00  0.0476269158
+##  [4,]  8.281792e-01 -4.215217e-01  0.7619340476
+##  [5,] -1.275115e-03 -2.554289e-01  0.1160516054
+##  [6,]  7.807627e-03  9.656822e-02 -0.0149038135
+##  [7,]  4.206521e-03 -2.528837e-02  0.0169815549
+##  [8,] -7.792320e-05 -1.320495e-02  0.0055337046
+##  [9,]  8.794617e-05  2.523592e-03 -0.0005526521
+## [10,]  5.977216e-05 -6.031942e-05  0.0002589987
+## 
+## $loggdp
+##           p_polity2        loggdp   wdi_brdeath
+##  [1,] 27.6941201350  5.521609e+02 38.4354426735
+##  [2,]  0.4452786029 -7.760218e+00  3.8647589495
+##  [3,]  1.1218023103  5.658021e+00 -0.4825706615
+##  [4,]  1.1527539804 -1.363870e+00  1.5346221629
+##  [5,] -0.0075648479 -6.382112e-01  0.2691604848
+##  [6,]  0.0126915399  2.226881e-01 -0.0442724758
+##  [7,]  0.0072401799 -4.274126e-02  0.0320561197
+##  [8,] -0.0002213178 -3.067164e-02  0.0125196739
+##  [9,]  0.0001354955  5.345033e-03 -0.0013389492
+## [10,]  0.0001279800  2.809096e-04  0.0003914793
+## 
+## $wdi_brdeath
+##           p_polity2        loggdp   wdi_brdeath
+##  [1,]  5.520943e-01   22.14805166 958.212883187
+##  [2,] -1.088126e+01 -200.67364552  82.934966334
+##  [3,]  4.730199e+00  136.53040788 -26.701026738
+##  [4,]  4.947976e+00  -40.27006502  25.410488919
+##  [5,] -2.713875e-01  -14.78483588   5.710124409
+##  [6,]  1.230573e-01    4.58049207  -1.183235915
+##  [7,]  8.134142e-02   -0.42748916   0.452764805
+##  [8,] -5.447896e-03   -0.64288214   0.253836373
+##  [9,]  8.702477e-04    0.09449641  -0.028669734
+## [10,]  2.348694e-03    0.01836933   0.001999858
+## 
+## attr(,"class")
+## [1] "pvargirf"
+```
+
+---
+
+```r
+plot(girf(ex2_demdevconflict, n.ahead=10, ma_approx_steps = 10))
+```
+
+&lt;img src="7Stochastic_files/figure-html/unnamed-chunk-10-1.png" height="100%" /&gt;
+
+
+---
+Hansen test
+---
+
+```r
+hansen_j_test(ex2_demdevconflict)
+```
+
+```
+## $statistic
+## [1] 22.08212
+## 
+## $p.value
+## [1] 1
+## 
+## $parameter
+## [1] 873
+## 
+## $nof_instruments
+## [1] 903
+## 
+## $method
+## [1] "Hansen-J-Test"
+```
+
+---
+Lag selection
+
+---
+
+```r
+Andrews_Lu_MMSC(ex2_demdevconflict)
+```
+
+```
+## $MMSC_BIC
+## [1] -5034.942
+## 
+## $MMSC_AIC
+## [1] -1763.918
+## 
+## $MMSC_HQIC
+## [1] -3229.588
+```
+
+
+---
+Balanced vs. unbalanced panels
+
+Unbalanced by design vs. missing data
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create();
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

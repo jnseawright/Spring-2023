@@ -1,0 +1,286 @@
+---
+title: "7: Stochatic Regressors in Panels and Panel VAR"
+subtitle: "Time Series and Panels"
+author: "<large>J. Seawright</large>"
+institute: "<small>Northwestern Political Science</small>" 
+date: "May 11, 2023"
+output: 
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+     
+
+---
+class: center, middle
+
+```{r, load_refs, include=FALSE, cache=FALSE}
+# Initializes the bibliography
+library(RefManageR)
+
+library(ggplot2)
+library(dplyr)
+library(nlme)
+
+BibOptions(check.entries = FALSE,
+           bib.style = "authoryear", # Bibliography style
+           max.names = 3, # Max author names displayed in bibliography
+           sorting = "nyt", #Name, year, title sorting
+           cite.style = "authoryear", # citation style
+           style = "markdown",
+           hyperlink = FALSE,
+           dashed = FALSE)
+#myBib <- ReadBib("assets/myBib.bib", check = FALSE)
+# Note: don't forget to clear the knitr cache to account for changes in the
+# bibliography.
+library(DT)
+
+usrightplotsexpanded <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/usrightplotsexpanded.csv")
+
+usrightplotsexpanded2 <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/usrightplotsexpanded2.csv")
+
+qog_std_ts_jan23 <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/qog_std_ts_jan23.csv")
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+style_mono_accent(
+  base_color = "#1c5253",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono"),
+  text_font_size = "1.6rem"
+)
+```
+---
+
+---
+Stochastic vs. deterministic regressors
+
+
+---
+Exogenous vs. endogenous regressors
+
+
+---
+### Strict Exogeneity
+
+$$E(\epsilon_{i, s} | \mathbf{X}_{i,t}) = 0$$, for any $s$, $t$.
+
+
+---
+### Predetermined
+
+$$E(\epsilon_{i, s} | \mathbf{X}_{i, t}) = 0$$, for $s > t$
+
+
+---
+### Martingale Difference
+
+$$E(\epsilon_{i} | \epsilon_{i-1}, \ldots, \epsilon_{1}, \mathbf{X}_{i}, \ldots, \mathbf{X}_{1}) = 0$$
+
+
+---
+### Weak vs. Strong Exogeneity
+
+
+---
+### Sequentially Exogenous
+
+$\mathbf{X}$ is *sequentially exogenous* conditional on the unobserved
+effects if:
+
+$$E(\epsilon_{i,t} | \alpha_{i}, \mathbf{X}_{i,t},\ldots,\mathbf{X}_{i,1}) = 0$$
+
+
+---
+$$y_{i,t} = \alpha_{i} + \gamma y_{i, t-1} + \mathbf{\beta} \mathbf{X}_{i,t} + \epsilon_{i,t}$$
+
+
+---
+Seemingly Unrelated Regressions
+
+
+---
+$$\mathbf{Y} = \mathbf{X} \mathbf{\beta} + \mathbf{\epsilon}$$
+
+
+---
+$$Var(\mathbf{Y}) = Var(\mathbf{\epsilon}) = \begin{bmatrix}
+    \sigma^{2}_{1} \mathbf{I}_{n} & \sigma_{12} \mathbf{I}_{n} \\
+    \sigma_{12} \mathbf{I}_{n} & \sigma^{2}_{2} \mathbf{I}_{n} \\
+\end{bmatrix}$$
+
+
+---
+$$\mathbf{b}_{GLS} = (\mathbf{X}^{T}(Var \mathbf{Y})^{-1} \mathbf{X})^{-1} \mathbf{X}^{T}(Var \mathbf{Y})^{-1} \mathbf{Y}$$
+
+
+---
+2SLS in Panels
+
+
+
+---
+Latent Variables Models
+
+* 2SLS plus measurement error models
+
+
+---
+Latent Variables Models
+
+$$x_{i, t} = \tau_{x} + \Lambda_{x} \xi_{i, t} + \delta_{i, t}$$
+
+$$y_{i, t} = \tau_{y} + \Lambda_{y} \eta_{i, t} + \epsilon_{i, t}$$
+
+$$\eta_{i, t} = \tau_{n} + \mathbb{B} \eta_{i, t-k} + \Gamma \xi_{i, t} + \zeta_{i, t}$$
+
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+library(lavaan)
+```
+
+
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+model<-' 
+#latentvariabledefinitions 
+ind60=~x1+x2+x3 
+dem60=~y1+a*y2+b*y3+c*y4 
+dem65=~y5+a*y6+b*y7+c*y8 
+
+#regressions 
+
+dem60~ind60 
+dem65~ind60+dem60 
+
+#residualcorrelations 
+y1~~y5 
+y2~~y4+y6 
+y3~~y7 
+y4~~y8 
+y6~~y8 
+' 
+fit.sam<-sam(model,data=PoliticalDemocracy,
+             mm.list=list(ind="ind60",dem=c("dem60","dem65"))) 
+```
+
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+
+summary(fit.sam)
+```
+
+---
+Panel Vector Autoregression
+
+
+---
+$$\mathbf{y}_{i,t} = \alpha_{i} + \sum_{l=1}^{p} \mathbf{A} \mathbf{y}_{i,t} + \mathbf{B} \mathbf{x}_{i,t} + \mathbf{C} \mathbf{s}_{i,t} + \epsilon_{i,t}$$
+
+
+---
+Generalized Method of Moments
+
+
+---
+Each additional time period adds another potential instrument, and
+therefore increases the total number of conditions which can be used in
+GMM.
+
+
+---
+GMM requires $T$ to be sort of smaller than $N$. Strictly speaking, meet
+one of two conditions:
+
+1.  As both parameters go to infinity, $\frac{log(T)^2}{N}$ has to go to
+    zero.
+
+2.  Limit the number of instruments to $q$. Then $\frac{q^3}{N}$ has to
+    go to zero.
+
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+library(panelvar)
+
+qog <- as.data.frame(qog_std_ts_jan23)
+
+qog$loggdp <- log(qog$wdi_gdpcappppcon2017)
+
+ex1_demdevconflict <- pvargmm(dependent_vars = c("p_polity2", "loggdp", "wdi_brdeath"),
+                             lags = 3,
+                             transformation = "fod",
+                             data = qog,
+                             panel_identifier=c("ccode", "year"),
+                             steps = c("twostep"),
+                             system_instruments = FALSE,
+                             max_instr_dependent_vars = 99,
+                             max_instr_predet_vars = 99,
+                             collapse = TRUE)
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+ex1_demdevconflict 
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+ex2_demdevconflict <- pvargmm(dependent_vars = c("p_polity2", "loggdp", "wdi_brdeath"),
+                             predet_vars = c("wdi_gerp"),
+                             lags = 3,
+                             transformation = "fod",
+                             data = qog,
+                             panel_identifier=c("ccode", "year"),
+                             steps = c("twostep"),
+                             system_instruments = FALSE,
+                             max_instr_dependent_vars = 99,
+                             max_instr_predet_vars = 99,
+                             collapse = TRUE)
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+girf(ex2_demdevconflict, n.ahead=4, ma_approx_steps = 4)
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+plot(girf(ex2_demdevconflict, n.ahead=4, ma_approx_steps = 4))
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+girf(ex2_demdevconflict, n.ahead=10, ma_approx_steps = 10)
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+plot(girf(ex2_demdevconflict, n.ahead=10, ma_approx_steps = 10))
+```
+
+
+---
+Hansen test
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+hansen_j_test(ex2_demdevconflict)
+```
+
+---
+Lag selection
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+Andrews_Lu_MMSC(ex2_demdevconflict)
+```
+
+
+---
+Balanced vs. unbalanced panels
+
+Unbalanced by design vs. missing data
+
