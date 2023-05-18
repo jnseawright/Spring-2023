@@ -12,6 +12,10 @@ Week six: <a href="https://jnseawright.github.io/Spring-2023/6-Multilevel/6Bayes
 
 Week seven: <a href="https://jnseawright.github.io/Spring-2023/7-Stochastic/7Stochastic.html#1">Stochastic IVs in Panels</a> slides.
 
+Week eight: <a href="https://jnseawright.github.io/Spring-2023/8-Survival/8Survival.html#1">Limited DVs in Panel models, and survival models</a> slides.
+
 <a href="https://jnseawright.github.io/Spring-2023/Labs/Lab 1.pdf">Lab 1</a> .
 
 <a href="https://jnseawright.github.io/Spring-2023/Labs/Lab 2.pdf">Lab 2</a> .
+
+<a href="https://jnseawright.github.io/Spring-2023/Labs/Lab 3.pdf">Lab 3</a> .
