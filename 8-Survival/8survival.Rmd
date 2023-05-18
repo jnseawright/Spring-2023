@@ -1,0 +1,268 @@
+---
+title: "8: Limited Dependent Variables in Panels and Survival Models"
+subtitle: "Time Series and Panels"
+author: "<large>J. Seawright</large>"
+institute: "<small>Northwestern Political Science</small>" 
+date: "May 18, 2023"
+output: 
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+     
+
+---
+class: center, middle
+
+```{r, load_refs, include=FALSE, cache=FALSE}
+# Initializes the bibliography
+library(RefManageR)
+
+library(ggplot2)
+library(dplyr)
+library(nlme)
+
+BibOptions(check.entries = FALSE,
+           bib.style = "authoryear", # Bibliography style
+           max.names = 3, # Max author names displayed in bibliography
+           sorting = "nyt", #Name, year, title sorting
+           cite.style = "authoryear", # citation style
+           style = "markdown",
+           hyperlink = FALSE,
+           dashed = FALSE)
+#myBib <- ReadBib("assets/myBib.bib", check = FALSE)
+# Note: don't forget to clear the knitr cache to account for changes in the
+# bibliography.
+library(DT)
+
+usrightplotsexpanded <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/usrightplotsexpanded.csv")
+
+usrightplotsexpanded2 <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/usrightplotsexpanded2.csv")
+
+qog_std_ts_jan23 <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/qog_std_ts_jan23.csv")
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+style_mono_accent(
+  base_color = "#1c5253",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono"),
+  text_font_size = "1.6rem"
+)
+```
+
+---
+### Logit, Probit, Etc.
+
+
+$$U^{*}_{i} = \mathbb{X}_{i} \mathbb{\beta} + \epsilon_{i}$$
+
+$Y_{i} = 1$ if and only if:
+
+$$U^{*}_{i} > 0$$
+
+$$\mathbb{X}_{i} \mathbb{\beta} > - \epsilon_{i}$$
+
+
+---
+### Logit, Probit, Etc.
+
+-   If $\epsilon_{i}$ has the uniform distribution, then this implies a linear probability model.
+
+-   If $\epsilon_{i}$ has the normal distribution, then this implies a probit.
+
+-   If $\epsilon_{i}$ has what's called the Gumbel distribution, then
+    this implies a logit.
+
+
+
+---
+### Random Effects and Panel GLMs
+
+$$U^{*}_{i,t} = \mathbb{X}_{i,t} \mathbb{\beta} + \alpha_{i} + \epsilon_{i,t}$$
+
+$Y_{i,t} = 1$ if and only if:
+
+$$U^{*}_{i.t} > 0$$
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+library(lme4)
+
+qog_std_ts_jan23$civilwar <- 1*(qog_std_ts_jan23$ht_regtype==19)
+qog_std_ts_jan23$loggdp <- log(qog_std_ts_jan23$wdi_gdpcappppcon2017)
+
+civwar.glm <- glmer(civilwar ~  p_polity2 + loggdp + al_ethnic2000  + 
+    (1 | cname), data = qog_std_ts_jan23, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+    nAGQ = 10)
+```
+
+
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+summary(civwar.glm)
+```
+
+---
+### Fixed Effects and Panel GLMs
+
+As $N$ goes to infinity, so do the number of estimation parameters.
+
+
+---
+### Conditional
+
+Conditional MLE: estimate the substantive model conditional on the sum:
+$\sum_{t=1}^{T} y_{i,t}$.
+
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+library(survival)
+
+civwar.clogit <- clogit(civilwar ~ p_polity2 + loggdp + al_ethnic2000 + strata(cname), data=qog_std_ts_jan23)
+```
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+summary(civwar.clogit)
+```
+
+---
+### Unconditional
+
+1. Get starting values for $\beta^{k}$ and $\alpha^{k}_{i}$, $i,i=1,...,N,k=0$, using a linear probability model.
+
+2. Go into a loop and repeat the following steps until you run out of patience or the results converge.
+
+3. Given $\beta^{k−1}$ and $\alpha^{k−1}_{i}$ compute $p^{k−1}_{i,t}$, which is the vector of probability values from the logit model for each observation. 
+
+---
+### Unconditional
+
+4. Given $p^{k−1}_{i,t}$ compute $(\beta^{k} − \beta^{k−1})$ by running a new regression while weighting cases by their estimated $p$.
+
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+library(bife)
+
+civwar.bife <- bife(civilwar ~ p_polity2 + loggdp + al_ethnic2000 |cname , data=qog_std_ts_jan23)
+```
+
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+summary(civwar.bife)
+```
+
+
+---
+### Panel Discrete Choice or Survival Models?
+
+
+---
+### Event History/Survival Analysis
+
+$f(t)$, the instantaneous failure rate
+
+
+---
+### Event History/Survival Analysis
+
+$S(t) = 1 - F(t)$
+
+
+---
+### Event History/Survival Analysis
+
+$h(t) = \frac{f(t)}{S(t)}$
+
+
+---
+### Event History/Survival Analysis
+
+Censoring and truncation
+
+--
+
+Censoring: missing data where we know the range within which $S(t,i)$ falls.
+
+Truncation: missing data where cases with values of $S(t,i)$ below a certain level disappear from the dataset.
+
+
+---
+### Event History/Survival Analysis
+
+Parametric models
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+qogsurv <- qog_std_ts_jan23 %>% 
+   group_by(cname) %>% 
+   mutate(
+     spell = rle(civilwar)$length[first(which(!is.na(rle(civilwar)$values)))]
+   )
+
+qogsurv <- qogsurv %>% filter(year==2000)
+
+```
+
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+civwar.weibull <- survreg(Surv(spell)~p_polity2 + loggdp + al_ethnic2000, dist='weibull', data=qogsurv)
+```
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+summary(civwar.weibull)
+```
+
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+civwar.exp <- survreg(Surv(spell)~p_polity2 + loggdp + al_ethnic2000, dist='exponential', data=qogsurv)
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+summary(civwar.exp)
+```
+---
+
+### Event History/Survival Analysis
+
+Cox proportional hazards model
+
+--
+
+The hazard rate, $h(t)$, is *proportional* if a one-unit increase in $X$ always increases the hazard by $e^\beta$.
+
+
+---
+### Event History/Survival Analysis
+
+When the proportional-hazards condition is met, we don't need a full model for the hazard rate, and can instead use a conditional function:
+
+$$h_{i}(t | \mathbf{x_{i}}) = h_{0}(t) exp(\beta^{T} \mathbf{x_{i}})$$
+---
+
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+civwar.coxph <- coxph(Surv(spell)~p_polity2 + loggdp + al_ethnic2000, data=qogsurv)
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+summary(civwar.coxph)
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+plot(survfit(civwar.coxph),xlab="Years", ylab="Proportion Not in Civil War")
+```
+
+---
+```{r, echo = TRUE, out.height="100%", fig.retina = 1}
+cox.zph(civwar.coxph)
+```

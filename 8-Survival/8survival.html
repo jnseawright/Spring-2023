@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>8: Limited Dependent Variables in Panels and Survival Models</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="J. Seawright" />
+    <meta name="date" content="2023-05-18" />
+    <script src="8survival_files/header-attrs-2.21/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# 8: Limited Dependent Variables in Panels and Survival Models
+]
+.subtitle[
+## Time Series and Panels
+]
+.author[
+### <large>J. Seawright</large>
+]
+.institute[
+### <small>Northwestern Political Science</small>
+]
+.date[
+### May 18, 2023
+]
+
+---
+
+class: center, middle
+
+
+
+
+
+---
+### Logit, Probit, Etc.
+
+
+`$$U^{*}_{i} = \mathbb{X}_{i} \mathbb{\beta} + \epsilon_{i}$$`
+
+`\(Y_{i} = 1\)` if and only if:
+
+`$$U^{*}_{i} &gt; 0$$`
+
+`$$\mathbb{X}_{i} \mathbb{\beta} &gt; - \epsilon_{i}$$`
+
+
+---
+### Logit, Probit, Etc.
+
+-   If `\(\epsilon_{i}\)` has the uniform distribution, then this implies a linear probability model.
+
+-   If `\(\epsilon_{i}\)` has the normal distribution, then this implies a probit.
+
+-   If `\(\epsilon_{i}\)` has what's called the Gumbel distribution, then
+    this implies a logit.
+
+
+
+---
+### Random Effects and Panel GLMs
+
+`$$U^{*}_{i,t} = \mathbb{X}_{i,t} \mathbb{\beta} + \alpha_{i} + \epsilon_{i,t}$$`
+
+`\(Y_{i,t} = 1\)` if and only if:
+
+`$$U^{*}_{i.t} &gt; 0$$`
+---
+
+
+```r
+library(lme4)
+```
+
+```
+## Loading required package: Matrix
+```
+
+```
+## 
+## Attaching package: 'lme4'
+```
+
+```
+## The following object is masked from 'package:nlme':
+## 
+##     lmList
+```
+
+```r
+qog_std_ts_jan23$civilwar &lt;- 1*(qog_std_ts_jan23$ht_regtype==19)
+qog_std_ts_jan23$loggdp &lt;- log(qog_std_ts_jan23$wdi_gdpcappppcon2017)
+
+civwar.glm &lt;- glmer(civilwar ~  p_polity2 + loggdp + al_ethnic2000  + 
+    (1 | cname), data = qog_std_ts_jan23, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+    nAGQ = 10)
+```
+
+
+---
+
+
+```r
+summary(civwar.glm)
+```
+
+```
+## Generalized linear mixed model fit by maximum likelihood (Adaptive
+##   Gauss-Hermite Quadrature, nAGQ = 10) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: civilwar ~ p_polity2 + loggdp + al_ethnic2000 + (1 | cname)
+##    Data: qog_std_ts_jan23
+## Control: glmerControl(optimizer = "bobyqa")
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##    121.5    152.5    -55.8    111.5     3636 
+## 
+## Scaled residuals: 
+##    Min     1Q Median     3Q    Max 
+## -2.093  0.000  0.000  0.000  2.193 
+## 
+## Random effects:
+##  Groups Name        Variance Std.Dev.
+##  cname  (Intercept) 655.9    25.61   
+## Number of obs: 3641, groups:  cname, 155
+## 
+## Fixed effects:
+##                Estimate Std. Error z value Pr(&gt;|z|)   
+## (Intercept)   -12.57766   26.78854  -0.470  0.63870   
+## p_polity2      -0.13904    0.09661  -1.439  0.15009   
+## loggdp        -10.02868    3.41101  -2.940  0.00328 **
+## al_ethnic2000  70.14877   33.78712   2.076  0.03788 * 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr) p_plt2 loggdp
+## p_polity2    0.052              
+## loggdp       0.067  0.180       
+## al_thnc2000 -0.782 -0.137 -0.661
+```
+
+---
+### Fixed Effects and Panel GLMs
+
+As `\(N\)` goes to infinity, so do the number of estimation parameters.
+
+
+---
+### Conditional
+
+Conditional MLE: estimate the substantive model conditional on the sum:
+`\(\sum_{t=1}^{T} y_{i,t}\)`.
+
+---
+
+
+```r
+library(survival)
+
+civwar.clogit &lt;- clogit(civilwar ~ p_polity2 + loggdp + al_ethnic2000 + strata(cname), data=qog_std_ts_jan23)
+```
+
+
+```r
+summary(civwar.clogit)
+```
+
+```
+## Call:
+## coxph(formula = Surv(rep(1, 15366L), civilwar) ~ p_polity2 + 
+##     loggdp + al_ethnic2000 + strata(cname), data = qog_std_ts_jan23, 
+##     method = "exact")
+## 
+##   n= 3641, number of events= 19 
+##    (11725 observations deleted due to missingness)
+## 
+##                     coef  exp(coef)   se(coef)      z Pr(&gt;|z|)    
+## p_polity2     -1.477e-01  8.627e-01  1.021e-01 -1.446 0.148252    
+## loggdp        -1.152e+01  9.958e-06  3.439e+00 -3.349 0.000811 ***
+## al_ethnic2000         NA         NA  0.000e+00     NA       NA    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##               exp(coef) exp(-coef) lower .95 upper .95
+## p_polity2     8.627e-01  1.159e+00 7.062e-01  1.053923
+## loggdp        9.958e-06  1.004e+05 1.177e-08  0.008423
+## al_ethnic2000        NA         NA        NA        NA
+## 
+## Concordance= 0.904  (se = 0.038 )
+## Likelihood ratio test= 28.45  on 2 df,   p=7e-07
+## Wald test            = 12.09  on 2 df,   p=0.002
+## Score (logrank) test = 21.19  on 2 df,   p=3e-05
+```
+
+---
+### Unconditional
+
+1. Get starting values for `\(\beta^{k}\)` and `\(\alpha^{k}_{i}\)`, `\(i,i=1,...,N,k=0\)`, using a linear probability model.
+
+2. Go into a loop and repeat the following steps until you run out of patience or the results converge.
+
+3. Given `\(\beta^{k−1}\)` and `\(\alpha^{k−1}_{i}\)` compute `\(p^{k−1}_{i,t}\)`, which is the vector of probability values from the logit model for each observation. 
+
+---
+### Unconditional
+
+4. Given `\(p^{k−1}_{i,t}\)` compute `\((\beta^{k} − \beta^{k−1})\)` by running a new regression while weighting cases by their estimated `\(p\)`.
+
+---
+
+
+```r
+library(bife)
+
+civwar.bife &lt;- bife(civilwar ~ p_polity2 + loggdp + al_ethnic2000 |cname , data=qog_std_ts_jan23)
+```
+
+---
+
+
+```r
+summary(civwar.bife)
+```
+
+```
+## binomial - logit link
+## 
+## civilwar ~ p_polity2 + loggdp + al_ethnic2000 | cname
+## 
+## Estimates:
+##                 Estimate Std. error z value Pr(&gt; |z|)    
+## p_polity2     -1.506e-01  1.057e-01  -1.425  0.154219    
+## loggdp        -1.247e+01  3.625e+00  -3.442  0.000578 ***
+## al_ethnic2000  2.095e+15  1.195e+15   1.753  0.079641 .  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## residual deviance= 54.56,
+## null deviance= 90.52,
+## n= 91, N= 4
+## 
+## ( 11725 observation(s) deleted due to missingness )
+## ( 3550 observation(s) deleted due to perfect classification )
+## 
+## Number of Fisher Scoring Iterations: 12 
+## 
+## Average individual fixed effect= -1.714358e+15
+```
+
+
+---
+### Panel Discrete Choice or Survival Models?
+
+
+---
+### Event History/Survival Analysis
+
+`\(f(t)\)`, the instantaneous failure rate
+
+
+---
+### Event History/Survival Analysis
+
+`\(S(t) = 1 - F(t)\)`
+
+
+---
+### Event History/Survival Analysis
+
+`\(h(t) = \frac{f(t)}{S(t)}\)`
+
+
+---
+### Event History/Survival Analysis
+
+Censoring and truncation
+
+--
+
+Censoring: missing data where we know the range within which `\(S(t,i)\)` falls.
+
+Truncation: missing data where cases with values of `\(S(t,i)\)` below a certain level disappear from the dataset.
+
+
+---
+### Event History/Survival Analysis
+
+Parametric models
+---
+
+
+```r
+qogsurv &lt;- qog_std_ts_jan23 %&gt;% 
+   group_by(cname) %&gt;% 
+   mutate(
+     spell = rle(civilwar)$length[first(which(!is.na(rle(civilwar)$values)))]
+   )
+
+qogsurv &lt;- qogsurv %&gt;% filter(year==2000)
+```
+
+---
+
+
+```r
+civwar.weibull &lt;- survreg(Surv(spell)~p_polity2 + loggdp + al_ethnic2000, dist='weibull', data=qogsurv)
+```
+---
+
+
+```r
+summary(civwar.weibull)
+```
+
+```
+## 
+## Call:
+## survreg(formula = Surv(spell) ~ p_polity2 + loggdp + al_ethnic2000, 
+##     data = qogsurv, dist = "weibull")
+##                  Value Std. Error      z      p
+## (Intercept)    3.68777    0.09312  39.60 &lt;2e-16
+## p_polity2      0.00127    0.00177   0.72   0.47
+## loggdp         0.00353    0.00928   0.38   0.70
+## al_ethnic2000  0.01126    0.04638   0.24   0.81
+## Log(scale)    -2.01747    0.07909 -25.51 &lt;2e-16
+## 
+## Scale= 0.133 
+## 
+## Weibull distribution
+## Loglik(model)= -510.4   Loglik(intercept only)= -510.8
+## 	Chisq= 0.78 on 3 degrees of freedom, p= 0.85 
+## Number of Newton-Raphson Iterations: 9 
+## n=150 (48 observations deleted due to missingness)
+```
+
+---
+
+
+```r
+civwar.exp &lt;- survreg(Surv(spell)~p_polity2 + loggdp + al_ethnic2000, dist='exponential', data=qogsurv)
+```
+
+---
+
+```r
+summary(civwar.exp)
+```
+
+```
+## 
+## Call:
+## survreg(formula = Surv(spell) ~ p_polity2 + loggdp + al_ethnic2000, 
+##     data = qogsurv, dist = "exponential")
+##                 Value Std. Error    z       p
+## (Intercept)   3.57883    0.71566 5.00 5.7e-07
+## p_polity2     0.00437    0.01343 0.33    0.75
+## loggdp        0.00700    0.07188 0.10    0.92
+## al_ethnic2000 0.01196    0.35180 0.03    0.97
+## 
+## Scale fixed at 1 
+## 
+## Exponential distribution
+## Loglik(model)= -699.2   Loglik(intercept only)= -699.3
+## 	Chisq= 0.14 on 3 degrees of freedom, p= 0.99 
+## Number of Newton-Raphson Iterations: 3 
+## n=150 (48 observations deleted due to missingness)
+```
+---
+
+### Event History/Survival Analysis
+
+Cox proportional hazards model
+
+--
+
+The hazard rate, `\(h(t)\)`, is *proportional* if a one-unit increase in `\(X\)` always increases the hazard by `\(e^\beta\)`.
+
+
+---
+### Event History/Survival Analysis
+
+When the proportional-hazards condition is met, we don't need a full model for the hazard rate, and can instead use a conditional function:
+
+`$$h_{i}(t | \mathbf{x_{i}}) = h_{0}(t) exp(\beta^{T} \mathbf{x_{i}})$$`
+---
+
+
+```r
+civwar.coxph &lt;- coxph(Surv(spell)~p_polity2 + loggdp + al_ethnic2000, data=qogsurv)
+```
+
+---
+
+```r
+summary(civwar.coxph)
+```
+
+```
+## Call:
+## coxph(formula = Surv(spell) ~ p_polity2 + loggdp + al_ethnic2000, 
+##     data = qogsurv)
+## 
+##   n= 150, number of events= 150 
+##    (48 observations deleted due to missingness)
+## 
+##                   coef exp(coef) se(coef)      z Pr(&gt;|z|)
+## p_polity2     -0.01270   0.98738  0.01339 -0.949    0.343
+## loggdp        -0.01655   0.98358  0.07189 -0.230    0.818
+## al_ethnic2000 -0.04190   0.95897  0.35571 -0.118    0.906
+## 
+##               exp(coef) exp(-coef) lower .95 upper .95
+## p_polity2        0.9874      1.013    0.9618     1.014
+## loggdp           0.9836      1.017    0.8543     1.132
+## al_ethnic2000    0.9590      1.043    0.4776     1.926
+## 
+## Concordance= 0.597  (se = 0.048 )
+## Likelihood ratio test= 1.13  on 3 df,   p=0.8
+## Wald test            = 1.14  on 3 df,   p=0.8
+## Score (logrank) test = 1.14  on 3 df,   p=0.8
+```
+
+---
+
+```r
+plot(survfit(civwar.coxph),xlab="Years", ylab="Proportion Not in Civil War")
+```
+
+&lt;img src="8survival_files/figure-html/unnamed-chunk-14-1.png" height="100%" /&gt;
+
+---
+
+```r
+cox.zph(civwar.coxph)
+```
+
+```
+##                 chisq df    p
+## p_polity2     1.59609  1 0.21
+## loggdp        0.50930  1 0.48
+## al_ethnic2000 0.00565  1 0.94
+## GLOBAL        1.89577  3 0.59
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create();
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
