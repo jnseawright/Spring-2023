@@ -14,6 +14,8 @@ Week seven: <a href="https://jnseawright.github.io/Spring-2023/7-Stochastic/7Sto
 
 Week eight: <a href="https://jnseawright.github.io/Spring-2023/8-Survival/8survival.html#1">Limited DVs in Panel models, and survival models</a> slides.
 
+Week nine: <a href="https://jnseawright.github.io/Spring-2023/9-Spatial/9Spatial.html#1">Spatial dependency</a> slides.
+
 <a href="https://jnseawright.github.io/Spring-2023/Labs/Lab 1.pdf">Lab 1</a> .
 
 <a href="https://jnseawright.github.io/Spring-2023/Labs/Lab 2.pdf">Lab 2</a> .
