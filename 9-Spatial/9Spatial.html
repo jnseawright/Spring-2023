@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>9: Spatial Analysis in Panels</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="J. Seawright" />
+    <meta name="date" content="2023-05-25" />
+    <script src="9Spatial_files/header-attrs-2.21/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# 9: Spatial Analysis in Panels
+]
+.subtitle[
+## Time Series and Panels
+]
+.author[
+### <large>J. Seawright</large>
+]
+.institute[
+### <small>Northwestern Political Science</small>
+]
+.date[
+### May 25, 2023
+]
+
+---
+
+class: center, middle
+
+
+
+
+
+---
+### Spatial Autocorrelation
+
+`$$cov(y_{i},y_{j}) \neq 0, i \neq j$$`
+
+
+---
+### Spatial Weight Matrix
+
+
+---
+
+```r
+library(knitr)
+include_graphics("ww1.jpg")
+```
+
+&lt;img src="ww1.jpg" width="100%" /&gt;
+
+
+---
+
+```r
+wwlm1 &lt;- lm(change ~ rgdppc_growth + prime_dummy + xregbet + prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + niche + gparties + gparties:prime_dummy, data = whittenwilliams, subset = whittenwilliams$clear1 == "High Clarity")
+```
+
+---
+
+```r
+summary(wwlm1)
+```
+
+```
+## 
+## Call:
+## lm(formula = change ~ rgdppc_growth + prime_dummy + xregbet + 
+##     prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + 
+##     party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + 
+##     niche + gparties + gparties:prime_dummy, data = whittenwilliams, 
+##     subset = whittenwilliams$clear1 == "High Clarity")
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -21.1345  -2.2087  -0.0219   2.4118  20.2052 
+## 
+## Coefficients:
+##                            Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                2.231462   0.586996   3.801 0.000167 ***
+## rgdppc_growth             -0.247507   0.104573  -2.367 0.018436 *  
+## prime_dummy               -8.365025   1.084267  -7.715 1.05e-13 ***
+## xregbet                   -4.271316   1.040051  -4.107 4.90e-05 ***
+## party_shift_t              0.006516   0.014101   0.462 0.644288    
+## party_shift_t1             0.022148   0.014665   1.510 0.131809    
+## ciep_perc                 -0.028953   0.017678  -1.638 0.102286    
+## niche                     -1.732206   0.727726  -2.380 0.017786 *  
+## gparties                   0.044307   0.171411   0.258 0.796172    
+## rgdppc_growth:prime_dummy  0.561396   0.203473   2.759 0.006074 ** 
+## rgdppc_growth:xregbet      0.454282   0.176336   2.576 0.010361 *  
+## prime_dummy:ciep_perc      0.103157   0.030437   3.389 0.000773 ***
+## xregbet:ciep_perc          0.054554   0.027337   1.996 0.046681 *  
+## prime_dummy:gparties       0.347545   0.354502   0.980 0.327518    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 4.587 on 384 degrees of freedom
+## Multiple R-squared:  0.1914,	Adjusted R-squared:  0.164 
+## F-statistic: 6.992 on 13 and 384 DF,  p-value: 3.379e-12
+```
+
+---
+###Moran's I
+
+`$$I = \frac{\sum_{i} \sum_{j} w_{ij} z_{i} * z_{j} / S_{0}}{\sum_{i} z^{2}_{i}/n}$$`
+
+Here, the `\(w\)`'s are any spatial weights, and the `\(z\)`'s are the variable of substantive interest having been mean-deviated.
+
+---
+
+```r
+library(spdep)
+```
+
+```
+## Loading required package: spData
+```
+
+```
+## To access larger datasets in this package, install the spDataLarge
+## package with: `install.packages('spDataLarge',
+## repos='https://nowosad.github.io/drat/', type='source')`
+```
+
+```
+## Loading required package: sf
+```
+
+```
+## Linking to GEOS 3.9.3, GDAL 3.5.2, PROJ 8.2.1; sf_use_s2() is TRUE
+```
+
+---
+
+```r
+ww.weights &lt;- mat2listw(as.matrix(wwclear), style="W")
+lm.morantest(wwlm1, ww.weights, alternative = "two.sided")
+```
+
+```
+## 
+## 	Global Moran I for regression residuals
+## 
+## data:  
+## model: lm(formula = change ~ rgdppc_growth + prime_dummy + xregbet +
+## prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t +
+## party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet
+## + niche + gparties + gparties:prime_dummy, data = whittenwilliams,
+## subset = whittenwilliams$clear1 == "High Clarity")
+## weights: ww.weights
+## 
+## Moran I statistic standard deviate = -3.5125, p-value = 0.0004439
+## alternative hypothesis: two.sided
+## sample estimates:
+## Observed Moran I      Expectation         Variance 
+##     -0.220137619     -0.005869467      0.003721198
+```
+
+---
+
+```r
+lm.LMtests(wwlm1, ww.weights, test = "LMerr")
+```
+
+```
+## 
+## 	Lagrange multiplier diagnostics for spatial dependence
+## 
+## data:  
+## model: lm(formula = change ~ rgdppc_growth + prime_dummy + xregbet +
+## prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t +
+## party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet
+## + niche + gparties + gparties:prime_dummy, data = whittenwilliams,
+## subset = whittenwilliams$clear1 == "High Clarity")
+## weights: ww.weights
+## 
+## LMErr = 12.996, df = 1, p-value = 0.0003121
+```
+
+
+---
+### Spatial Autoregression
+
+`$$\mathbf{y}_{t} = \rho \mathbf{W} \mathbf{y}_{t} + \mathbf{X}_{t} \mathbf{\beta} + \mathbf{\epsilon}$$`
+
+
+---
+### Spatial Autoregression
+
+MLE, spatial instruments, and other fitting methods
+
+
+---
+
+```r
+library(spatialreg)
+```
+
+```
+## Loading required package: Matrix
+```
+
+```
+## 
+## Attaching package: 'spatialreg'
+```
+
+```
+## The following objects are masked from 'package:spdep':
+## 
+##     get.ClusterOption, get.coresOption, get.mcOption,
+##     get.VerboseOption, get.ZeroPolicyOption, set.ClusterOption,
+##     set.coresOption, set.mcOption, set.VerboseOption,
+##     set.ZeroPolicyOption
+```
+
+```r
+ww.lagsarlm &lt;- lagsarlm(change ~ rgdppc_growth + prime_dummy + xregbet + prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + niche + gparties + gparties:prime_dummy, data = whittenwilliams[whittenwilliams$clear1 == "High Clarity",], listw = ww.weights)
+```
+
+---
+
+```r
+summary(ww.lagsarlm)
+```
+
+```
+## 
+## Call:lagsarlm(formula = change ~ rgdppc_growth + prime_dummy + xregbet + 
+##     prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + 
+##     party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + 
+##     niche + gparties + gparties:prime_dummy, data = whittenwilliams[whittenwilliams$clear1 == 
+##     "High Clarity", ], listw = ww.weights)
+## 
+## Residuals:
+##         Min          1Q      Median          3Q         Max 
+## -20.4708461  -2.2147594  -0.0063224   2.4962318  20.3891754 
+## 
+## Type: lag 
+## Coefficients: (asymptotic standard errors) 
+##                             Estimate Std. Error z value  Pr(&gt;|z|)
+## (Intercept)                2.0909380  0.5656068  3.6968 0.0002183
+## rgdppc_growth             -0.2488754  0.1002194 -2.4833 0.0130169
+## prime_dummy               -7.9339964  1.0466952 -7.5800 3.464e-14
+## xregbet                   -4.0454298  0.9977374 -4.0546 5.022e-05
+## party_shift_t              0.0059155  0.0135140  0.4377 0.6615811
+## party_shift_t1             0.0192719  0.0140595  1.3707 0.1704561
+## ciep_perc                 -0.0304814  0.0169480 -1.7985 0.0720942
+## niche                     -1.6896996  0.6975370 -2.4224 0.0154192
+## gparties                   0.0526970  0.1643634  0.3206 0.7485038
+## rgdppc_growth:prime_dummy  0.5183310  0.1951290  2.6564 0.0078991
+## rgdppc_growth:xregbet      0.4336085  0.1691136  2.5640 0.0103471
+## prime_dummy:ciep_perc      0.0993483  0.0292102  3.4011 0.0006710
+## xregbet:ciep_perc          0.0540604  0.0262054  2.0630 0.0391172
+## prime_dummy:gparties       0.3136716  0.3399734  0.9226 0.3561970
+## 
+## Rho: -0.14243, LR test value: 14.321, p-value: 0.00015416
+## Asymptotic standard error: 0.038077
+##     z-value: -3.7405, p-value: 0.00018364
+## Wald statistic: 13.991, p-value: 0.00018364
+## 
+## Log likelihood: -1156.719 for lag model
+## ML residual variance (sigma squared): 19.326, (sigma: 4.3962)
+## Number of observations: 398 
+## Number of parameters estimated: 16 
+## AIC: 2345.4, (AIC for lm: 2357.8)
+## LM test for residual autocorrelation
+## test value: 0.072885, p-value: 0.78718
+```
+
+---
+
+```r
+ww.stsls &lt;- stsls(change ~ rgdppc_growth + prime_dummy + xregbet + prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + niche + gparties + gparties:prime_dummy, data = whittenwilliams[whittenwilliams$clear1 == "High Clarity",], listw = ww.weights)
+```
+
+---
+
+```r
+summary(ww.stsls)
+```
+
+```
+## 
+## Call:stsls(formula = change ~ rgdppc_growth + prime_dummy + xregbet + 
+##     prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + 
+##     party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + 
+##     niche + gparties + gparties:prime_dummy, data = whittenwilliams[whittenwilliams$clear1 == 
+##     "High Clarity", ], listw = ww.weights)
+## 
+## Residuals:
+##         Min          1Q      Median          3Q         Max 
+## -20.4425271  -2.2013115  -0.0035185   2.4990890  20.3970261 
+## 
+## Coefficients: 
+##                             Estimate Std. Error t value  Pr(&gt;|t|)
+## Rho                       -0.1485063  0.1111559 -1.3360  0.181543
+## (Intercept)                2.0849417  0.5835316  3.5730  0.000353
+## rgdppc_growth             -0.2489338  0.1021091 -2.4379  0.014772
+## prime_dummy               -7.9156038  1.1108198 -7.1259 1.034e-12
+## xregbet                   -4.0357909  1.0306772 -3.9157 9.015e-05
+## party_shift_t              0.0058899  0.0137758  0.4276  0.668977
+## party_shift_t1             0.0191491  0.0144940  1.3212  0.186443
+## ciep_perc                 -0.0305466  0.0173021 -1.7655  0.077482
+## niche                     -1.6878857  0.7113142 -2.3729  0.017648
+## gparties                   0.0530550  0.1674914  0.3168  0.751424
+## rgdppc_growth:prime_dummy  0.5164933  0.2014911  2.5634  0.010367
+## rgdppc_growth:xregbet      0.4327263  0.1729257  2.5024  0.012336
+## prime_dummy:ciep_perc      0.0991857  0.0298662  3.3210  0.000897
+## xregbet:ciep_perc          0.0540393  0.0266939  2.0244  0.042928
+## prime_dummy:gparties       0.3122262  0.3471379  0.8994  0.368424
+## 
+## Residual variance (sigma squared): 20.061, (sigma: 4.4789)
+```
+
+
+---
+
+```r
+ww.errorsarlm &lt;- errorsarlm(change ~ rgdppc_growth + prime_dummy + xregbet + prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + niche + gparties + gparties:prime_dummy, data = whittenwilliams[whittenwilliams$clear1 == "High Clarity",], listw = ww.weights)
+```
+
+---
+
+```r
+summary(ww.errorsarlm)
+```
+
+```
+## 
+## Call:errorsarlm(formula = change ~ rgdppc_growth + prime_dummy + xregbet + 
+##     prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + 
+##     party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + 
+##     niche + gparties + gparties:prime_dummy, data = whittenwilliams[whittenwilliams$clear1 == 
+##     "High Clarity", ], listw = ww.weights)
+## 
+## Residuals:
+##       Min        1Q    Median        3Q       Max 
+## -20.73132  -2.18434   0.04939   2.30262  20.11850 
+## 
+## Type: error 
+## Coefficients: (asymptotic standard errors) 
+##                             Estimate Std. Error z value  Pr(&gt;|z|)
+## (Intercept)                2.2814432  0.5308574  4.2977 1.726e-05
+## rgdppc_growth             -0.2466652  0.0965314 -2.5553 0.0106101
+## prime_dummy               -8.1752611  1.0778571 -7.5847 3.331e-14
+## xregbet                   -4.0361233  1.0036421 -4.0215 5.783e-05
+## party_shift_t              0.0050804  0.0134451  0.3779 0.7055346
+## party_shift_t1             0.0164039  0.0141135  1.1623 0.2451200
+## ciep_perc                 -0.0333895  0.0162815 -2.0508 0.0402897
+## niche                     -1.6835093  0.7018400 -2.3987 0.0164530
+## gparties                   0.0221523  0.1529597  0.1448 0.8848493
+## rgdppc_growth:prime_dummy  0.4948241  0.2004786  2.4682 0.0135789
+## rgdppc_growth:xregbet      0.4492478  0.1685930  2.6647 0.0077060
+## prime_dummy:ciep_perc      0.1058057  0.0296050  3.5739 0.0003517
+## xregbet:ciep_perc          0.0553564  0.0257426  2.1504 0.0315250
+## prime_dummy:gparties       0.3623071  0.3473875  1.0429 0.2969723
+## 
+## Lambda: -0.1443, LR test value: 12.874, p-value: 0.0003331
+## Asymptotic standard error: 0.040224
+##     z-value: -3.5873, p-value: 0.00033414
+## Wald statistic: 12.869, p-value: 0.00033414
+## 
+## Log likelihood: -1157.442 for error model
+## ML residual variance (sigma squared): 19.39, (sigma: 4.4034)
+## Number of observations: 398 
+## Number of parameters estimated: 16 
+## AIC: 2346.9, (AIC for lm: 2357.8)
+```
+
+---
+### SLX
+
+`$$\mathbf{y}_{i,t} = \mathbf{W} \mathbf{X}_{t} \gamma + \mathbf{X}_{i,t} \mathbf{\beta} + \mathbf{\epsilon}_{i,t}$$`
+
+
+---
+
+```r
+ww.slx &lt;- lmSLX(change ~ rgdppc_growth + prime_dummy + xregbet + prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + niche + gparties + gparties:prime_dummy, data = whittenwilliams[whittenwilliams$clear1 == "High Clarity",], listw = ww.weights, Durbin=TRUE)
+```
+
+---
+
+```
+## 
+## Call:
+## lm(formula = formula(paste("y ~ ", paste(colnames(x)[-1], collapse = "+"))), 
+##     data = as.data.frame(x), weights = weights)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -20.9282  -2.0050  -0.0675   2.1535  20.7026 
+## 
+## Coefficients:
+##                                Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                    2.173758   0.798822   2.721 0.006811 ** 
+## rgdppc_growth                 -0.138668   0.130451  -1.063 0.288479    
+## prime_dummy                   -7.995730   1.153132  -6.934 1.83e-11 ***
+## xregbet                       -4.120902   1.064259  -3.872 0.000128 ***
+## party_shift_t                  0.002860   0.014474   0.198 0.843477    
+## party_shift_t1                 0.016388   0.015021   1.091 0.275983    
+## ciep_perc                     -0.020072   0.020440  -0.982 0.326756    
+## niche                         -1.884861   0.741127  -2.543 0.011388 *  
+## gparties                       0.284609   0.408334   0.697 0.486240    
+## rgdppc_growth.prime_dummy      0.431701   0.212638   2.030 0.043048 *  
+## rgdppc_growth.xregbet          0.398564   0.181589   2.195 0.028792 *  
+## prime_dummy.ciep_perc          0.106494   0.031658   3.364 0.000849 ***
+## xregbet.ciep_perc              0.056531   0.027908   2.026 0.043517 *  
+## prime_dummy.gparties           0.337312   0.370192   0.911 0.362791    
+## lag.rgdppc_growth             -0.053932   0.139608  -0.386 0.699491    
+## lag.prime_dummy                1.160177   1.278318   0.908 0.364689    
+## lag.xregbet                    0.573925   1.157324   0.496 0.620254    
+## lag.party_shift_t             -0.007203   0.014591  -0.494 0.621821    
+## lag.party_shift_t1            -0.027041   0.015522  -1.742 0.082326 .  
+## lag.ciep_perc                 -0.020104   0.022452  -0.895 0.371122    
+## lag.niche                      0.101380   0.811228   0.125 0.900615    
+## lag.gparties                  -0.297056   0.410509  -0.724 0.469751    
+## lag.rgdppc_growth.prime_dummy -0.327409   0.223748  -1.463 0.144233    
+## lag.rgdppc_growth.xregbet      0.089663   0.208609   0.430 0.667579    
+## lag.prime_dummy.ciep_perc      0.004257   0.037450   0.114 0.909554    
+## lag.xregbet.ciep_perc         -0.006470   0.034037  -0.190 0.849342    
+## lag.prime_dummy.gparties       0.014695   0.397213   0.037 0.970509    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 4.601 on 371 degrees of freedom
+## Multiple R-squared:  0.214,	Adjusted R-squared:  0.159 
+## F-statistic: 3.886 on 26 and 371 DF,  p-value: 2.478e-09
+```
+
+---
+### MAUP
+
+-   Scale of spatial units
+
+-   Grid shift
+
+
+---
+
+```r
+if(!require(raster)){
+    install.packages("raster")
+    library(raster)
+}
+```
+
+```
+## Loading required package: raster
+```
+
+```
+## Loading required package: sp
+```
+
+```
+## 
+## Attaching package: 'raster'
+```
+
+```
+## The following object is masked from 'package:nlme':
+## 
+##     getData
+```
+
+```
+## The following object is masked from 'package:dplyr':
+## 
+##     select
+```
+
+```r
+x &lt;- c(87,95,72,37,44,24,40,55,55,38,88,34,41,30,26,35,38,24,14,56,37,34,8,18,49,44,51,67,17,37,55,25,33,32,59,54)
+       
+
+y  &lt;- c(72,75,85,29,58,30,50,60,49,46,84,23,21,46,22,42,45,14,19,36,48,23,8,29,38,47,52,52,22,48,58,40,46,38,35,55) 
+        
+
+mx &lt;- matrix(ncol=6, nrow=6, x)
+
+my &lt;- matrix(ncol=6, nrow=6, y)
+
+rx &lt;- raster(mx)
+
+ry &lt;- raster(my)
+```
+---
+&lt;img src="9Spatial_files/figure-html/unnamed-chunk-16-1.png" width="100%" /&gt;
+
+---
+
+```
+## 
+## Call:
+## lm(formula = ry[] ~ rx[])
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -20.303  -8.536   3.293   7.466  20.312 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 10.37497    4.12773   2.513   0.0169 *  
+## rx[]         0.75435    0.08668   8.703 3.61e-10 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 10.49 on 34 degrees of freedom
+## Multiple R-squared:  0.6902,	Adjusted R-squared:  0.6811 
+## F-statistic: 75.74 on 1 and 34 DF,  p-value: 3.605e-10
+```
+
+---
+
+```r
+rx1 &lt;- aggregate(rx, fact=c(1,2), fun=mean, expand=T)
+
+ry1 &lt;- aggregate(ry, fact=c(1,2), fun=mean, expand=T)
+```
+
+---
+&lt;img src="9Spatial_files/figure-html/unnamed-chunk-19-1.png" width="100%" /&gt;
+
+---
+
+```
+## 
+## Call:
+## lm(formula = ry1[] ~ rx1[])
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -9.884 -3.621 -1.827  5.501  9.119 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 13.58992    3.74759   3.626  0.00227 ** 
+## rx1[]        0.67982    0.08096   8.398 2.94e-07 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 5.768 on 16 degrees of freedom
+## Multiple R-squared:  0.8151,	Adjusted R-squared:  0.8035 
+## F-statistic: 70.52 on 1 and 16 DF,  p-value: 2.94e-07
+```
+
+---
+
+```r
+rx2 &lt;- aggregate(rx, fact=c(2,1), fun=mean, expand=T)
+
+ry2 &lt;- aggregate(ry, fact=c(2,1), fun=mean, expand=T)
+```
+
+---
+&lt;img src="9Spatial_files/figure-html/unnamed-chunk-22-1.png" width="100%" /&gt;
+
+---
+
+```
+## 
+## Call:
+## lm(formula = ry2[] ~ rx2[])
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -9.4540 -3.2961 -0.8083  4.1461  8.9260 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  1.25704    3.88449   0.324     0.75    
+## rx2[]        0.96571    0.08491  11.373 4.46e-09 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 5.487 on 16 degrees of freedom
+## Multiple R-squared:  0.8899,	Adjusted R-squared:  0.883 
+## F-statistic: 129.4 on 1 and 16 DF,  p-value: 4.456e-09
+```
+
+---
+### Calculating or Estimating W
+
+
+---
+
+```r
+library(maptools)
+```
+
+```
+## Checking rgeos availability: FALSE
+## Please note that 'maptools' will be retired during 2023,
+## plan transition at your earliest convenience;
+## some functionality will be moved to 'sp'.
+##  	Note: when rgeos is not available, polygon geometry 	computations in maptools depend on gpclib,
+##  	which has a restricted licence. It is disabled by default;
+##  	to enable gpclib, type gpclibPermit()
+```
+
+```r
+chi.neighborhoods &lt;- read_sf("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/chicago neighborhoods/Neighborhoods_2012b.shp")
+```
+---
+&lt;img src="9Spatial_files/figure-html/unnamed-chunk-25-1.png" width="100%" /&gt;
+
+---
+
+```r
+library(spdep)
+neighborhood.nb &lt;- poly2nb (chi.neighborhoods)
+nbweights.1w &lt;- nb2listw(neighborhood.nb, style="W", zero.policy=T)
+```
+
+---
+
+```r
+nbweights.1w
+```
+
+```
+## Characteristics of weights list object:
+## Neighbour list object:
+## Number of regions: 98 
+## Number of nonzero links: 504 
+## Percentage nonzero weights: 5.247813 
+## Average number of links: 5.142857 
+## 
+## Weights style: W 
+## Weights constants summary:
+##    n   nn S0       S1       S2
+## W 98 9604 98 42.71522 412.0896
+```
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create();
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
