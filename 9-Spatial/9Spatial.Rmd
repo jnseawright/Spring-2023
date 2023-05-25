@@ -1,0 +1,293 @@
+---
+title: "9: Spatial Analysis in Panels"
+subtitle: "Time Series and Panels"
+author: "<large>J. Seawright</large>"
+institute: "<small>Northwestern Political Science</small>" 
+date: "May 25, 2023"
+output: 
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+     
+
+---
+class: center, middle
+
+```{r, load_refs, include=FALSE, cache=FALSE}
+# Initializes the bibliography
+library(RefManageR)
+
+library(ggplot2)
+library(dplyr)
+library(nlme)
+
+BibOptions(check.entries = FALSE,
+           bib.style = "authoryear", # Bibliography style
+           max.names = 3, # Max author names displayed in bibliography
+           sorting = "nyt", #Name, year, title sorting
+           cite.style = "authoryear", # citation style
+           style = "markdown",
+           hyperlink = FALSE,
+           dashed = FALSE)
+#myBib <- ReadBib("assets/myBib.bib", check = FALSE)
+# Note: don't forget to clear the knitr cache to account for changes in the
+# bibliography.
+library(DT)
+library(foreign)
+
+usrightplotsexpanded <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/usrightplotsexpanded.csv")
+
+usrightplotsexpanded2 <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/usrightplotsexpanded2.csv")
+
+qog_std_ts_jan23 <- read.csv("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/qog_std_ts_jan23.csv")
+
+whittenwilliams <- read.dta("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/whittenwilliams.dta")
+
+wwclear <- read.dta("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/wwclear.dta")
+
+wwunclear <- read.dta("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/wwunclear.dta")
+
+
+
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+style_mono_accent(
+  base_color = "#1c5253",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono"),
+  text_font_size = "1.6rem"
+)
+```
+
+---
+### Spatial Autocorrelation
+
+$$cov(y_{i},y_{j}) \neq 0, i \neq j$$
+
+
+---
+### Spatial Weight Matrix
+
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+library(knitr)
+include_graphics("ww1.jpg")
+```
+
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+wwlm1 <- lm(change ~ rgdppc_growth + prime_dummy + xregbet + prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + niche + gparties + gparties:prime_dummy, data = whittenwilliams, subset = whittenwilliams$clear1 == "High Clarity")
+```
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+summary(wwlm1)
+```
+
+---
+###Moran's I
+
+$$I = \frac{\sum_{i} \sum_{j} w_{ij} z_{i} * z_{j} / S_{0}}{\sum_{i} z^{2}_{i}/n}$$
+
+Here, the $w$'s are any spatial weights, and the $z$'s are the variable of substantive interest having been mean-deviated.
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+library(spdep)
+```
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+ww.weights <- mat2listw(as.matrix(wwclear), style="W")
+lm.morantest(wwlm1, ww.weights, alternative = "two.sided")
+```
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+lm.LMtests(wwlm1, ww.weights, test = "LMerr")
+```
+
+
+---
+### Spatial Autoregression
+
+$$\mathbf{y}_{t} = \rho \mathbf{W} \mathbf{y}_{t} + \mathbf{X}_{t} \mathbf{\beta} + \mathbf{\epsilon}$$
+
+
+---
+### Spatial Autoregression
+
+MLE, spatial instruments, and other fitting methods
+
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+library(spatialreg)
+
+ww.lagsarlm <- lagsarlm(change ~ rgdppc_growth + prime_dummy + xregbet + prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + niche + gparties + gparties:prime_dummy, data = whittenwilliams[whittenwilliams$clear1 == "High Clarity",], listw = ww.weights)
+```
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+summary(ww.lagsarlm)
+```
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+ww.stsls <- stsls(change ~ rgdppc_growth + prime_dummy + xregbet + prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + niche + gparties + gparties:prime_dummy, data = whittenwilliams[whittenwilliams$clear1 == "High Clarity",], listw = ww.weights)
+```
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+summary(ww.stsls)
+```
+
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+ww.errorsarlm <- errorsarlm(change ~ rgdppc_growth + prime_dummy + xregbet + prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + niche + gparties + gparties:prime_dummy, data = whittenwilliams[whittenwilliams$clear1 == "High Clarity",], listw = ww.weights)
+```
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+summary(ww.errorsarlm)
+```
+
+---
+### SLX
+
+$$\mathbf{y}_{i,t} = \mathbf{W} \mathbf{X}_{t} \gamma + \mathbf{X}_{i,t} \mathbf{\beta} + \mathbf{\epsilon}_{i,t}$$
+
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+ww.slx <- lmSLX(change ~ rgdppc_growth + prime_dummy + xregbet + prime_dummy:rgdppc_growth + xregbet:rgdppc_growth + party_shift_t + party_shift_t1 + ciep_perc + ciep_perc:prime_dummy + ciep_perc:xregbet + niche + gparties + gparties:prime_dummy, data = whittenwilliams[whittenwilliams$clear1 == "High Clarity",], listw = ww.weights, Durbin=TRUE)
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+summary(ww.slx)
+```
+
+---
+### MAUP
+
+-   Scale of spatial units
+
+-   Grid shift
+
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+if(!require(raster)){
+    install.packages("raster")
+    library(raster)
+}
+
+x <- c(87,95,72,37,44,24,40,55,55,38,88,34,41,30,26,35,38,24,14,56,37,34,8,18,49,44,51,67,17,37,55,25,33,32,59,54)
+       
+
+y  <- c(72,75,85,29,58,30,50,60,49,46,84,23,21,46,22,42,45,14,19,36,48,23,8,29,38,47,52,52,22,48,58,40,46,38,35,55) 
+        
+
+mx <- matrix(ncol=6, nrow=6, x)
+
+my <- matrix(ncol=6, nrow=6, y)
+
+rx <- raster(mx)
+
+ry <- raster(my)
+```
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+par(mfrow=c(1,2))
+plot(rx,main="Independent raster (x)")
+text(rx)
+plot(ry,main="Dependent raster (y)")
+text(ry)
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+model_1 <- lm(ry[] ~ rx[])
+
+summary(model_1)
+```
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+rx1 <- aggregate(rx, fact=c(1,2), fun=mean, expand=T)
+
+ry1 <- aggregate(ry, fact=c(1,2), fun=mean, expand=T)
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+par(mfrow=c(1,2))
+plot(rx1,main="Independent raster (x1)")
+text(rx1)
+plot(ry1,main="Dependent raster (y1)")
+text(ry1)
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+model_2 <- lm(ry1[] ~ rx1[])
+
+summary(model_2)
+```
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+rx2 <- aggregate(rx, fact=c(2,1), fun=mean, expand=T)
+
+ry2 <- aggregate(ry, fact=c(2,1), fun=mean, expand=T)
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+par(mfrow=c(1,2))
+plot(rx2,main="Independent raster (x2)")
+text(rx2)
+plot(ry2,main="Dependent raster (y2)")
+text(ry2)
+```
+
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+model_3 <- lm(ry2[] ~ rx2[])
+
+summary(model_3)
+```
+
+---
+### Calculating or Estimating W
+
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+library(maptools)
+
+chi.neighborhoods <- read_sf("C:/Users/jnsno/OneDrive - Northwestern University/Seawright Teaching/TSCS Teaching/chicago neighborhoods/Neighborhoods_2012b.shp")
+```
+---
+```{r, echo = FALSE, out.width="100%", fig.retina = 1}
+plot(chi.neighborhoods)
+```
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+library(spdep)
+neighborhood.nb <- poly2nb (chi.neighborhoods)
+nbweights.1w <- nb2listw(neighborhood.nb, style="W", zero.policy=T)
+```
+
+---
+```{r, echo = TRUE, out.width="100%", fig.retina = 1}
+nbweights.1w
+```
+
